@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DarkSource · 像素世界</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="nav-wrap">
+      <div class="nav-inner">
+        <a href="#" class="brand" data-view="home">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div>
+            <div class="brand-text-main">DarkSource Offical Website</div>
+            <div class="brand-text-sub">PIXEL WORLDS DEV</div>
+          </div>
+        </a>
+
+        <button class="nav-toggle" aria-label="展开导航" type="button">
+          <span class="nav-toggle-bars"></span>
+        </button>
+
+        <nav class="nav-menu" id="navMenu">
+          <button class="nav-link active" type="button" data-view="home">首页</button>
+
+          <div class="nav-group">
+            <button class="nav-link nav-group-label" type="button" data-view="devlog">
+              资讯<span class="nav-chevron"></span>
+            </button>
+            <div class="nav-dropdown">
+              <button class="nav-dropdown-link" type="button" data-view="devlog">开发日志</button>
+              <button class="nav-dropdown-link" type="button" data-view="game-intro">游戏介绍</button>
+              <button class="nav-dropdown-link" type="button" data-view="privacy">隐私声明</button>
+            </div>
+          </div>
+
+          <button class="nav-link" type="button" data-view="tools">工具集</button>
+          <button class="nav-link" type="button" data-view="about">关于</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- 首页 / Hero -->
+      <section id="home" class="pixel-card hero view-section is-active" aria-label="首页">
+        <div>
+          <h1 class="hero-title">进入像素夜行世界</h1>
+          <p class="hero-subtitle">
+            这里是 DarkSource 的个人 github.io 主页，也是我在业余时间搭建的像素游戏世界。
+            你可以在这里看到开发日志、游戏设定、实验中的小工具，以及一些关于隐私和数据使用的承诺。
+          </p>
+
+          <div class="hero-tags">
+            <span class="hero-tag">像素风</span>
+            <span class="hero-tag">独立开发</span>
+            <span class="hero-tag">Dev Log</span>
+            <span class="hero-tag">Side Project</span>
+          </div>
+
+          <div class="hero-actions">
+            <button class="pixel-button" type="button" data-view="devlog">查看开发日志</button>
+            <button class="pixel-button" type="button" data-view="game-intro" style="background:#6ec5ff;">游戏世界概览</button>
+          </div>
+        </div>
+
+        <!-- 简单像素场景：天空 + 草地 + 角色 -->
+        <div class="pixel-card" aria-hidden="true">
+          <div class="hero-preview">
+            <!-- 第 1 行：夜空 + 星星 / 月亮 -->
+            <div class="hero-pixel sky star"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky star"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky moon"></div>
+            <div class="hero-pixel sky moon"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky star"></div>
+            <div class="hero-pixel sky"></div>
+
+            <!-- 第 2 行：天空 -->
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky star"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky star"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky star"></div>
+
+            <!-- 第 3 行：天空 + 角色顶部 -->
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+
+            <!-- 第 4 行：角色身体 -->
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+
+            <!-- 第 5 行：角色脚 + 草地上层 -->
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel grass char"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass char"></div>
+            <div class="hero-pixel sky char"></div>
+            <div class="hero-pixel sky"></div>
+            <div class="hero-pixel sky"></div>
+
+            <!-- 第 6 行：草地 -->
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+            <div class="hero-pixel grass"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 开发日志 -->
+      <section id="devlog" class="pixel-card view-section">
+        <h2 class="section-title">开发日志 DEV LOG</h2>
+        <p class="section-sub">
+          下方会展示来自 <code>devlog/config.json</code> 的最新几条开发日志摘要。想看完整分组视图可以进入日志目录页面。
+        </p>
+        <ul id="devlogPreview" class="log-list"></ul>
+        <div style="margin-top:0.8rem;">
+          <a href="devlog/" class="pixel-button">打开完整开发日志目录</a>
+        </div>
+      </section>
+
+      <!-- 游戏介绍 -->
+      <section id="game-intro" class="pixel-card view-section">
+        <h2 class="section-title">游戏介绍 GAME INTRO</h2>
+        <p class="section-sub">
+          这一部分可以用来简单介绍你的像素游戏世界：玩法、核心循环、视觉设定、目标平台等等。
+          当前写的是占位文案，后续你可以替换成正式说明。
+        </p>
+        <div class="chip-row">
+          <span class="chip">夜行城市 / 地下设施</span>
+          <span class="chip">复古像素 + 现代 UI</span>
+          <span class="chip">单人 / 轻剧情 / 探索</span>
+          <span class="chip">可选：Roguelite 元素</span>
+        </div>
+      </section>
+
+      <!-- 隐私声明 -->
+      <section id="privacy" class="pixel-card view-section">
+        <h2 class="section-title">隐私声明 PRIVACY</h2>
+        <p class="section-sub">
+          作为个人主页和实验项目，本页默认不主动收集你的个人身份信息。若未来接入第三方统计或在线服务，会在这里明确说明。
+        </p>
+        <div class="privacy-block">
+          <p>目前约定如下（可按你的实际情况修改）：</p>
+          <ul style="margin-top:0.4rem; padding-left:1.1rem;">
+            <li>不主动存储可识别个人身份的信息（如真实姓名、邮箱等）。</li>
+            <li>如启用访问统计，仅使用匿名聚合数据用于优化内容和性能。</li>
+            <li>如未来发布可下载版本的游戏，会在下载页面附带更详细的隐私说明。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 工具集 -->
+      <section id="tools" class="pixel-card view-section">
+        <h2 class="section-title">工具集 TOOLKIT</h2>
+        <p class="section-sub">
+          这里可以放你在开发过程中顺手写的一些小工具：地图编辑器、数值模拟、存档查看器等。
+          暂时写成列表形式，后续可以替换成真正的链接或内嵌页面。
+        </p>
+        <ul class="tool-list">
+          <li>· 像素调色板（计划中）</li>
+          <li>· 关卡节奏规划表（计划中）</li>
+          <li>· 存档数据可视化（计划中）</li>
+        </ul>
+      </section>
+
+      <!-- 关于 -->
+      <section id="about" class="pixel-card view-section">
+        <div class="about-grid">
+          <div>
+            <h2 class="section-title">关于 ABOUT</h2>
+            <p class="section-sub">
+              这里是你可以随意发挥的地方：写写自己、这个项目为什么存在、你期望它长成什么样子。
+            </p>
+            <p class="about-meta">
+              你可以简单说明：<br />
+              · 白天在做什么工作，晚上/周末用这个项目做什么尝试；<br />
+              · 喜欢的游戏 / 影响你美术风格或系统设计的作品；<br />
+              · 联系方式（如果你愿意公开）。
+            </p>
+          </div>
+          <dl class="about-meta">
+            <dt>项目形态</dt>
+            <dd>个人 / 业余像素游戏与工具集合</dd>
+            <dt>技术栈</dt>
+            <dd>当前为静态 github.io 页面，后续可接入你习惯的框架或引擎展示。</dd>
+            <dt>未来可能</dt>
+            <dd>开发日志更细化、Demo 下载链接、在线小玩具、文档索引等。</dd>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span>© <span id="year"></span> DarkSource. All rights reserved.</span>
+        <span>本页部署于 GitHub Pages · 夜间像素模式</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="assets/main.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,59 @@
+[
+  {
+    "id": "2026-01-09-ai-idle",
+    "date": "2026-01-09",
+    "title": "增加待机 AI 行为",
+    "summary": "为敌人和部分单位补充基础待机 AI，让画面在没有输入时也保持轻微活动感。",
+    "tags": ["ai", "enemy", "behaviour"]
+  },
+  {
+    "id": "2026-01-09-combat-balance",
+    "date": "2026-01-09",
+    "title": "战斗数值与结算调整",
+    "summary": "微调基础攻击力与受击公式，重新校准部分敌人的血量区间，使前期节奏更顺滑。",
+    "tags": ["balance", "combat"]
+  },
+  {
+    "id": "2026-01-23-demo-level-pass",
+    "date": "2026-01-23",
+    "title": "试玩关卡流程贯通",
+    "summary": "打通从标题界面进入试玩关卡再返回的完整流程，修复若干传送与复位相关的 Bug。",
+    "tags": ["level", "flow", "bugfix"]
+  },
+  {
+    "id": "2026-01-23-control-feel",
+    "date": "2026-01-23",
+    "title": "手感与相机细节打磨",
+    "summary": "调整跳跃与落地缓冲时间，修正摄像机在边缘区域抖动的问题，提升整体操控手感。",
+    "tags": ["feel", "camera", "movement"]
+  },
+  {
+    "id": "2026-01-30-ui-timeline",
+    "date": "2026-01-30",
+    "title": "新增时间线 / 进度展示 UI",
+    "summary": "在关卡界面加入时间线式的进度条，用于表示当前章节推进状态，并为后续剧情事件预留锚点。",
+    "tags": ["ui", "timeline"]
+  },
+  {
+    "id": "2026-01-30-config-refactor",
+    "date": "2026-01-30",
+    "title": "整理配置与数据表",
+    "summary": "将零散的数值配置迁移到统一的配置表中，便于后续批量调整与版本对比。",
+    "tags": ["config", "data"]
+  },
+  {
+    "id": "2026-02-06-logo-iteration",
+    "date": "2026-02-06",
+    "title": "主 LOGO 与标题界面迭代",
+    "summary": "尝试多版像素风 LOGO 与标题布局，确定当前版本的字体和色块排列方案。",
+    "tags": ["art", "logo", "title-screen"]
+  },
+  {
+    "id": "2026-02-06-audio-pass",
+    "date": "2026-02-06",
+    "title": "初步接入 BGM 与音效",
+    "summary": "为主菜单与试玩关接入测试用 BGM，同时补全基础 UI 点击与角色受击音效。",
+    "tags": ["audio", "bgm", "sfx"]
+  }
+]
+

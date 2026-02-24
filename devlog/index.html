@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DarkSource · 开发日志目录</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .devlog-header {
+      margin-bottom: 1rem;
+    }
+
+    .devlog-notes {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.6;
+    }
+
+    .devlog-list {
+      list-style: none;
+      margin-top: 0.6rem;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .devlog-date-group {
+      margin-bottom: 0.9rem;
+      padding: 0.5rem 0.4rem 0.6rem;
+      border-left: 4px solid rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .devlog-date-heading {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.1rem 0.6rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      background: linear-gradient(to right, rgba(255, 230, 109, 0.95), rgba(255, 178, 107, 0.95));
+      color: #111827;
+      border: 2px solid #000000;
+      box-shadow:
+        0 2px 0 #000000,
+        0 4px 0 rgba(0, 0, 0, 0.8);
+    }
+
+    .devlog-date-heading span.devlog-date-text {
+      font-weight: 700;
+    }
+
+    .devlog-items {
+      list-style: none;
+      margin-left: 0.25rem;
+    }
+
+    .devlog-item {
+      padding: 0.4rem 0.2rem;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+    }
+
+    .devlog-item:last-child {
+      border-bottom: none;
+    }
+
+    .devlog-item-title {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+
+    .devlog-item-meta {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin-bottom: 0.15rem;
+    }
+
+    .devlog-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      color: var(--accent-cyan);
+      border: 2px solid #000000;
+    }
+
+    .devlog-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+
+    .devlog-tag-chip {
+      padding: 0.08rem 0.4rem;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      font-size: 0.7rem;
+    }
+
+    .devlog-summary {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-top: 0.05rem;
+    }
+
+    .pixel-button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        margin-top: 1rem;
+      }
+
+      .devlog-date-group {
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="nav-wrap">
+      <div class="nav-inner">
+        <a href="../index.html" class="brand">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div>
+            <div class="brand-text-main">DarkSource</div>
+            <div class="brand-text-sub">DEV LOG INDEX</div>
+          </div>
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <div class="devlog-header">
+          <h1 class="section-title">开发日志目录 DEV LOG INDEX</h1>
+          <p class="section-sub">
+            这一页会根据 <code>devlog/config.json</code> 中的配置，自动生成开发日志的索引列表。
+          </p>
+          <div class="devlog-notes">
+            <p>维护方式（完全手动）：</p>
+            <ul style="margin-top:0.25rem; padding-left:1rem;">
+              <li>打开 <code>devlog/config.json</code> 文件。</li>
+              <li>按已有示例的结构，在数组中追加或修改条目。</li>
+              <li>每个条目包含：<code>id</code>、<code>date</code>、<code>title</code>、<code>summary</code>、<code>tags</code>。</li>
+            </ul>
+          </div>
+          <div class="pixel-button-row">
+            <a href="../index.html" class="pixel-button">返回首页</a>
+          </div>
+        </div>
+
+        <ul id="devlogList" class="devlog-list"></ul>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span>© <span id="year"></span> DarkSource. All rights reserved.</span>
+        <span>Dev Log Index · GitHub Pages</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear().toString();
+
+    function parseDateValue(dateStr) {
+      if (typeof dateStr !== "string" || !dateStr) return 0;
+      // 假设为 YYYY-MM-DD，可直接按数值比较
+      const normalized = dateStr.replace(/-/g, "");
+      const num = Number(normalized);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    async function loadDevlog() {
+      const listEl = document.getElementById("devlogList");
+      try {
+        const res = await fetch("./config.json", { cache: "no-store" });
+        if (!res.ok) {
+          listEl.innerHTML = "<li>无法加载配置文件 devlog/config.json。</li>";
+          return;
+        }
+        const rawItems = await res.json();
+        if (!Array.isArray(rawItems) || rawItems.length === 0) {
+          listEl.innerHTML = "<li>当前还没有开发日志记录。</li>";
+          return;
+        }
+
+        // 1. 排序：按日期从新到旧
+        const items = [...rawItems].sort((a, b) => {
+          const da = parseDateValue(a?.date);
+          const db = parseDateValue(b?.date);
+          return db - da;
+        });
+
+        // 2. 分组：按日期分组
+        const groups = new Map();
+        items.forEach((item) => {
+          const date = item?.date ?? "未设定日期";
+          if (!groups.has(date)) {
+            groups.set(date, []);
+          }
+          groups.get(date).push(item);
+        });
+
+        // 3. 渲染：按日期分组，从新到旧
+        const html = Array.from(groups.entries())
+          .map(([date, groupItems]) => {
+            const groupHtml = groupItems
+              .map((item) => {
+                const id = item.id ?? "";
+                const title = item.title ?? "";
+                const summary = item.summary ?? "";
+                const tags = Array.isArray(item.tags) ? item.tags : [];
+
+                const tagsHtml = tags
+                  .map((t) => '<span class="devlog-tag-chip">' + String(t) + "</span>")
+                  .join("");
+
+                return `
+                  <li class="devlog-item">
+                    <div class="devlog-item-title">${title}</div>
+                    <div class="devlog-item-meta">
+                      <span class="devlog-id">${id}</span>
+                      <span class="devlog-tags">${tagsHtml}</span>
+                    </div>
+                    <div class="devlog-summary">${summary}</div>
+                  </li>
+                `;
+              })
+              .join("");
+
+            return `
+              <li class="devlog-date-group">
+                <div class="devlog-date-heading">
+                  <span class="devlog-date-text">${date}</span>
+                  <span>DEV LOG</span>
+                </div>
+                <ul class="devlog-items">
+                  ${groupHtml}
+                </ul>
+              </li>
+            `;
+          })
+          .join("");
+
+        listEl.innerHTML = html;
+      } catch (err) {
+        console.error("加载 devlog/config.json 失败：", err);
+        if (window.location.protocol === "file:") {
+          listEl.innerHTML =
+            "<li>当前通过 file:// 本地直接打开页面，浏览器禁止读取本地 JSON 文件。请使用本地服务器或部署到 GitHub Pages 后再访问。</li>";
+        } else {
+          listEl.innerHTML = "<li>加载配置时发生错误，请检查 JSON 格式或网络访问是否正常。</li>";
+        }
+      }
+    }
+
+    loadDevlog();
+  </script>
+</body>
+</html>
+
