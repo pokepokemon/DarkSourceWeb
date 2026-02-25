@@ -1,17 +1,18 @@
 /**
  * 注入公共导航与页脚。依赖：页面中存在 #nav-placeholder 与 #footer-placeholder。
- * 导航、页脚使用站点根相对路径；脚本根据当前路径计算 base 并重写链接与高亮。
+ * 导航、页脚使用站点根相对路径；由 SITE_BASE 决定站点根（子路径部署时在 config.js 中设置）。
  */
 (function () {
+  // 站点根路径：部署到子路径（如 GitHub Pages 项目页）时在 config.js 中设为 e.g. "/DarkSourceWeb/"
+  var SITE_BASE = (typeof window !== "undefined" && window.SITE_BASE != null && window.SITE_BASE !== "")
+    ? (String(window.SITE_BASE).replace(/\/$/, "") + "/")
+    : "";
+
   var pathname = typeof location !== "undefined" && location.pathname ? location.pathname : "";
   var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
   var segments = pathname.split("/").filter(Boolean);
-  // 深度：路径末尾为文件名（含 .）时少算一层，否则按目录层数算（如 /devlog/ 需一层 ../）
-  var last = segments[segments.length - 1];
-  var isFile = last && last.indexOf(".") !== -1;
-  var depth = segments.length > 0 ? (segments.length - (isFile ? 1 : 0)) : 0;
-  var base = depth > 0 ? "../".repeat(depth) : "";
-  var basePartials = base + "partials/";
+  // 根路径时用 "/partials/" 从站点根请求；子路径时用 SITE_BASE + "partials/"
+  var basePartials = (SITE_BASE || "/") + "partials/";
 
   function currentNavId() {
     if (pathname.indexOf("tab-to-devlog") !== -1) return "tools-tab";
@@ -29,9 +30,10 @@
 
   function applyBaseToNav(container) {
     if (!container) return;
+    var base = SITE_BASE || "/";
     var links = container.querySelectorAll('a[href]');
     links.forEach(function (a) {
-      var href = a.getAttribute("href") || "";
+      var href = (a.getAttribute("href") || "").replace(/^\//, "");
       if (href.indexOf("http") === 0 || href.indexOf("#") === 0) return;
       a.setAttribute("href", base + href);
     });
@@ -89,6 +91,7 @@
     document.body.classList.remove("page-loading");
     document.body.classList.add("page-ready");
   }).catch(function () {
+    var base = SITE_BASE || "/";
     if (navPlaceholder) navPlaceholder.innerHTML = "<div class=\"nav-inner\"><a href=\"" + base + "index.html\" class=\"brand\">DarkSource</a></div>";
     if (footerPlaceholder) footerPlaceholder.innerHTML = "<div class=\"footer-inner\"><span>© " + new Date().getFullYear() + " DarkSource.</span></div>";
     document.body.classList.remove("page-loading");
