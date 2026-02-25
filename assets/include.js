@@ -3,10 +3,12 @@
  * 导航、页脚使用站点根相对路径；由 SITE_BASE 决定站点根（子路径部署时在 config.js 中设置）。
  */
 (function () {
-  // 站点根路径：部署到子路径（如 GitHub Pages 项目页）时在 config.js 中设为 e.g. "/DarkSourceWeb/"
-  var SITE_BASE = (typeof window !== "undefined" && window.SITE_BASE != null && window.SITE_BASE !== "")
+  // 站点根路径：config.js 中配置线上子路径（如 "/DarkSourceWeb/"）；本地 localhost/127.0.0.1 时自动用根路径，无需改 config
+  var host = typeof location !== "undefined" ? location.hostname : "";
+  var isLocal = host === "localhost" || host === "127.0.0.1";
+  var SITE_BASE = isLocal ? "" : (typeof window !== "undefined" && window.SITE_BASE != null && window.SITE_BASE !== ""
     ? (String(window.SITE_BASE).replace(/\/$/, "") + "/")
-    : "";
+    : "");
 
   var pathname = typeof location !== "undefined" && location.pathname ? location.pathname : "";
   var hash = typeof location !== "undefined" && location.hash ? location.hash.slice(1) : "";
