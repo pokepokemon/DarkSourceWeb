@@ -1,5 +1,4 @@
-// 设置年份
-document.getElementById("year").textContent = new Date().getFullYear().toString();
+// 年份由 include.js 在注入页脚时设置
 
 // 手机端导航开关
 const navToggle = document.querySelector(".nav-toggle");
@@ -13,15 +12,23 @@ const viewSections = document.querySelectorAll(".view-section");
 const topNavButtons = document.querySelectorAll(".nav-menu .nav-link[data-view]");
 const dropdownButtons = document.querySelectorAll(".nav-dropdown-link[data-view]");
 const infoGroupButton = document.querySelector(".nav-group-label[data-view='devlog']");
+const toolsGroupButton = document.querySelector(".nav-group-label[data-view='tools']");
 const INFO_VIEWS = new Set(["devlog", "game-intro", "privacy"]);
 
 function setView(viewId) {
   // 切换内容区域
+  const activeSection = document.getElementById(viewId);
   viewSections.forEach((section) => {
     if (section.id === viewId) {
+      section.classList.remove("view-in");
       section.classList.add("is-active");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          section.classList.add("view-in");
+        });
+      });
     } else {
-      section.classList.remove("is-active");
+      section.classList.remove("is-active", "view-in");
     }
   });
 
@@ -34,6 +41,8 @@ function setView(viewId) {
       btn.classList.add("active");
     } else if (INFO_VIEWS.has(viewId) && target === "devlog") {
       // 资讯分组：当任何一个资讯子页面激活时，高亮“资讯”
+      btn.classList.add("active");
+    } else if (viewId === "tools" && target === "tools") {
       btn.classList.add("active");
     } else {
       btn.classList.remove("active");
@@ -56,6 +65,11 @@ function setView(viewId) {
     infoGroupButton.classList.add("active");
   } else if (infoGroupButton && viewId !== "devlog") {
     infoGroupButton.classList.remove("active");
+  }
+  if (viewId === "tools" && toolsGroupButton) {
+    toolsGroupButton.classList.add("active");
+  } else if (toolsGroupButton) {
+    toolsGroupButton.classList.remove("active");
   }
 }
 
@@ -106,13 +120,14 @@ async function loadDevlogPreview() {
     const latest = items.slice(0, 5);
     const html = latest
       .map((item) => {
-        const id = item.id ?? "log";
-        const title = item.title ?? "";
-        const summary = item.summary ?? "";
-        const text = title || summary || "";
+        const date = item.date ?? "";
+        const raw = item.summary;
+        const text = Array.isArray(raw)
+          ? raw.filter((s) => s != null && String(s).trim() !== "").join(" · ") || ""
+          : (raw ?? "");
         return `
           <li>
-            <span class="log-tag">${id}</span>
+            <span class="log-tag">${date}</span>
             ${text}
           </li>
         `;
@@ -134,8 +149,22 @@ async function loadDevlogPreview() {
   }
 }
 
-// 初始化
-bindViewTriggers();
-setView("home");
-loadDevlogPreview();
+// 初始化（导航由 include.js 异步注入，需在 nav-injected 后或 nav 已存在时执行）
+function initView() {
+  bindViewTriggers();
+  var hashView = window.location.hash.slice(1).replace(/^#/, "");
+  if (hashView === "about") {
+    window.location.replace("about.html");
+    return;
+  }
+  if (hashView === "game-intro") {
+    window.location.replace("game-intro.html");
+    return;
+  }
+  if (hashView && document.getElementById(hashView)) setView(hashView);
+  else setView("home");
+  loadDevlogPreview();
+}
+if (document.getElementById("navMenu")) initView();
+else window.addEventListener("nav-injected", initView);
 

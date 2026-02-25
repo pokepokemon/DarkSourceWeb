@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TabToDevLog · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .tool-section {
+      margin-bottom: 1.2rem;
+    }
+
+    .tool-section label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.35rem;
+    }
+
+    .tool-textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 0.6rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      background: rgba(0, 0, 0, 0.4);
+      border: 4px solid #000000;
+      color: var(--text-main);
+      resize: vertical;
+    }
+
+    .tool-textarea::placeholder {
+      color: var(--text-sub);
+      opacity: 0.8;
+    }
+
+    .tool-output {
+      width: 100%;
+      min-height: 120px;
+      padding: 0.6rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      background: rgba(0, 0, 0, 0.5);
+      border: 4px solid #000000;
+      color: var(--accent-cyan);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .tool-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+    }
+
+    .tool-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">TabToDevLog</h1>
+        <p class="section-sub">
+          将「日期 + 多行内容」的文本转成 <code>devlog/config.json</code> 中的单条 JSON 块。第一行为日期（如 2026/2/6），其余每行一条 summary。
+        </p>
+
+        <div class="tool-section">
+          <label for="input">输入（第一行日期，以下每行一条）</label>
+          <textarea
+            id="input"
+            class="tool-textarea"
+            placeholder="2026/2/6&#10;新增了自动存档机制&#10;首页正式LOGO资源、多语言LOGO资源&#10;Cursor样式调整，鼠标移到人物或是可交互物件时变更样式"
+          ></textarea>
+          <p class="tool-hint">日期支持 2026/2/6 或 2026/02/06，后续行可带 Tab 缩进，空行会忽略。</p>
+        </div>
+
+        <div class="tool-actions">
+          <button type="button" class="pixel-button" id="convertBtn">转换为 JSON</button>
+        </div>
+
+        <div class="tool-section" style="margin-top:1rem;">
+          <label for="output">输出（可复制到 config.json）</label>
+          <pre id="output" class="tool-output" readonly></pre>
+          <div class="tool-actions">
+            <button type="button" class="pixel-button" id="copyBtn" disabled>复制到剪贴板</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="../assets/include.js"></script>
+  <script>
+    function normalizeDate(str) {
+      const s = String(str).trim();
+      const parts = s.split(/[/\-\.]/).map((p) => p.trim()).filter(Boolean);
+      if (parts.length < 3) return null;
+      const y = parts[0].padStart(4, "0");
+      const m = parts[1].padStart(2, "0");
+      const d = parts[2].padStart(2, "0");
+      return y + "-" + m + "-" + d;
+    }
+
+    function convert() {
+      const raw = document.getElementById("input").value;
+      const lines = raw.split(/\r?\n/).map((line) => line.replace(/^\t+/, "").trim()).filter((line) => line.length > 0);
+      if (lines.length === 0) {
+        document.getElementById("output").textContent = "";
+        document.getElementById("copyBtn").disabled = true;
+        return;
+      }
+      const dateStr = normalizeDate(lines[0]);
+      const date = dateStr || "未设定日期";
+      const summary = lines.slice(1);
+      const block = {
+        date: date,
+        summary: summary,
+        images: []
+      };
+      const json = JSON.stringify(block, null, 2);
+      document.getElementById("output").textContent = json;
+      document.getElementById("copyBtn").disabled = false;
+    }
+
+    document.getElementById("convertBtn").addEventListener("click", convert);
+
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      const pre = document.getElementById("output");
+      const text = pre.textContent;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(
+        () => {
+          const btn = document.getElementById("copyBtn");
+          const orig = btn.textContent;
+          btn.textContent = "已复制";
+          btn.disabled = false;
+          setTimeout(() => { btn.textContent = orig; }, 1200);
+        },
+        () => { alert("复制失败，请手动选择输出框内容复制"); }
+      );
+    });
+  </script>
+</body>
+</html>

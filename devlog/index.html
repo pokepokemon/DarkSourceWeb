@@ -31,6 +31,10 @@
       color: var(--text-sub);
     }
 
+    .devlog-scroll-container {
+      margin-top: 0.6rem;
+    }
+
     .devlog-date-group {
       margin-bottom: 0.9rem;
       padding: 0.5rem 0.4rem 0.6rem;
@@ -79,43 +83,35 @@
       margin-bottom: 0.2rem;
     }
 
-    .devlog-item-meta {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-      margin-bottom: 0.15rem;
-    }
-
-    .devlog-id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.75rem;
-      padding: 0.1rem 0.35rem;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.6);
-      color: var(--accent-cyan);
-      border: 2px solid #000000;
-    }
-
-    .devlog-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-    }
-
-    .devlog-tag-chip {
-      padding: 0.08rem 0.4rem;
-      border-radius: 999px;
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      font-size: 0.7rem;
-    }
-
     .devlog-summary {
       font-size: 0.85rem;
       color: var(--text-sub);
       margin-top: 0.05rem;
+    }
+
+    .devlog-summary-line {
+      margin-bottom: 0.2rem;
+    }
+
+    .devlog-summary-line:last-child {
+      margin-bottom: 0;
+    }
+
+    .devlog-images {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.35rem;
+    }
+
+    .devlog-images img {
+      max-width: 220px;
+      border: 3px solid #000000;
+      box-shadow:
+        0 3px 0 #000000,
+        0 6px 0 rgba(0, 0, 0, 0.85);
+      image-rendering: pixelated;
+      background: #000000;
     }
 
     .pixel-button-row {
@@ -137,58 +133,33 @@
     }
   </style>
 </head>
-<body>
+<body class="page-loading">
   <div class="page">
     <header class="nav-wrap">
-      <div class="nav-inner">
-        <a href="../index.html" class="brand">
-          <div class="brand-logo" aria-hidden="true"></div>
-          <div>
-            <div class="brand-text-main">DarkSource</div>
-            <div class="brand-text-sub">DEV LOG INDEX</div>
-          </div>
-        </a>
-      </div>
+      <div id="nav-placeholder"></div>
     </header>
 
     <main>
       <section class="pixel-card">
         <div class="devlog-header">
           <h1 class="section-title">开发日志目录 DEV LOG INDEX</h1>
-          <p class="section-sub">
-            这一页会根据 <code>devlog/config.json</code> 中的配置，自动生成开发日志的索引列表。
-          </p>
-          <div class="devlog-notes">
-            <p>维护方式（完全手动）：</p>
-            <ul style="margin-top:0.25rem; padding-left:1rem;">
-              <li>打开 <code>devlog/config.json</code> 文件。</li>
-              <li>按已有示例的结构，在数组中追加或修改条目。</li>
-              <li>每个条目包含：<code>id</code>、<code>date</code>、<code>title</code>、<code>summary</code>、<code>tags</code>。</li>
-            </ul>
-          </div>
-          <div class="pixel-button-row">
-            <a href="../index.html" class="pixel-button">返回首页</a>
-          </div>
         </div>
 
-        <ul id="devlogList" class="devlog-list"></ul>
+        <div class="devlog-scroll-container" id="devlogScroll">
+          <ul id="devlogList" class="devlog-list"></ul>
+        </div>
       </section>
     </main>
 
     <footer>
-      <div class="footer-inner">
-        <span>© <span id="year"></span> DarkSource. All rights reserved.</span>
-        <span>Dev Log Index · GitHub Pages</span>
-      </div>
+      <div id="footer-placeholder"></div>
     </footer>
   </div>
 
+  <script src="../assets/include.js"></script>
   <script>
-    document.getElementById("year").textContent = new Date().getFullYear().toString();
-
     function parseDateValue(dateStr) {
       if (typeof dateStr !== "string" || !dateStr) return 0;
-      // 假设为 YYYY-MM-DD，可直接按数值比较
       const normalized = dateStr.replace(/-/g, "");
       const num = Number(normalized);
       return Number.isFinite(num) ? num : 0;
@@ -225,28 +196,50 @@
           groups.get(date).push(item);
         });
 
+        // summary 支持字符串或字符串数组，数组时每项一行
+        function escapeHtml(s) {
+          const t = String(s);
+          return t
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+        function summaryToHtml(summary) {
+          if (Array.isArray(summary)) {
+            return summary
+              .filter((line) => line != null && String(line).trim() !== "")
+              .map((line) => '<div class="devlog-summary-line">' + escapeHtml(line) + "</div>")
+              .join("");
+          }
+          return '<div class="devlog-summary-line">' + escapeHtml(summary ?? "") + "</div>";
+        }
+
         // 3. 渲染：按日期分组，从新到旧
         const html = Array.from(groups.entries())
           .map(([date, groupItems]) => {
             const groupHtml = groupItems
               .map((item) => {
-                const id = item.id ?? "";
-                const title = item.title ?? "";
-                const summary = item.summary ?? "";
-                const tags = Array.isArray(item.tags) ? item.tags : [];
+                const summaryHtml = summaryToHtml(item.summary);
+                const images = Array.isArray(item.images) ? item.images : [];
 
-                const tagsHtml = tags
-                  .map((t) => '<span class="devlog-tag-chip">' + String(t) + "</span>")
+                const imagesHtml = images
+                  .map((img) => {
+                    if (!img) return "";
+                    if (typeof img === "string") {
+                      return '<img src="' + escapeHtml(img) + '" alt="devlog image" />';
+                    }
+                    const src = img.src ?? "";
+                    if (!src) return "";
+                    const alt = img.alt ?? "devlog image";
+                    return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '" />';
+                  })
                   .join("");
 
                 return `
                   <li class="devlog-item">
-                    <div class="devlog-item-title">${title}</div>
-                    <div class="devlog-item-meta">
-                      <span class="devlog-id">${id}</span>
-                      <span class="devlog-tags">${tagsHtml}</span>
-                    </div>
-                    <div class="devlog-summary">${summary}</div>
+                    <div class="devlog-summary">${summaryHtml}</div>
+                    ${imagesHtml ? '<div class="devlog-images">' + imagesHtml + "</div>" : ""}
                   </li>
                 `;
               })

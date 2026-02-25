@@ -1,0 +1,40 @@
+<!-- 全站导航：仅修改此文件即可同步到首页、开发日志、工具、隐私等所有页面。链接为站点根相对路径，由 include.js 按当前路径自动加 base。 -->
+<div class="nav-inner">
+  <a href="index.html" class="brand" data-nav-id="home" data-view="home">
+    <div class="brand-logo" aria-hidden="true"></div>
+    <div>
+      <div class="brand-text-main">DarkSource Official Website</div>
+      <div class="brand-text-sub">PIXEL WORLDS DEV</div>
+    </div>
+  </a>
+
+  <button class="nav-toggle" aria-label="展开导航" type="button">
+    <span class="nav-toggle-bars"></span>
+  </button>
+
+  <nav class="nav-menu" id="navMenu">
+    <a class="nav-link" href="index.html" data-nav-id="home" data-view="home">首页</a>
+
+    <div class="nav-group">
+      <button class="nav-link nav-group-label" type="button" data-view="devlog">
+        资讯<span class="nav-chevron"></span>
+      </button>
+      <div class="nav-dropdown">
+        <a class="nav-dropdown-link" href="devlog/" data-nav-id="devlog">开发日志</a>
+        <a class="nav-dropdown-link" href="game-intro.html" data-nav-id="game-intro">游戏介绍</a>
+        <a class="nav-dropdown-link" href="privacy/privacy-sc.html" data-nav-id="privacy">隐私声明</a>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <button class="nav-link nav-group-label" type="button" data-view="tools">
+        工具集<span class="nav-chevron"></span>
+      </button>
+      <div class="nav-dropdown">
+        <a class="nav-dropdown-link" href="tools/tab-to-devlog.html" data-nav-id="tools-tab">日志添加</a>
+      </div>
+    </div>
+
+    <a class="nav-link" href="about.html" data-nav-id="about">关于</a>
+  </nav>
+</div>

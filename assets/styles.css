@@ -14,6 +14,7 @@
   --max-width: 1080px;
   --transition-fast: 0.15s ease-out;
   --nav-height: 64px;
+  --footer-height: 64px;
 }
 
 * {
@@ -81,8 +82,10 @@ body {
 /* 页面布局 */
 .page {
   flex: 1;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-bottom: var(--footer-height);
   background:
     linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.6)),
     radial-gradient(circle at 20% 0, rgba(255, 255, 255, 0.18), transparent 55%),
@@ -363,6 +366,7 @@ main {
   width: 100%;
   margin: 1.25rem auto 1.75rem;
   padding: 0 1rem;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -374,6 +378,14 @@ main {
 
 .view-section.is-active {
   display: block;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.26s ease-out, transform 0.26s ease-out;
+}
+
+.view-section.is-active.view-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 section {
@@ -444,18 +456,44 @@ section {
 
 .hero-pixel.grass {
   background: var(--grass-green);
+  animation: pixel-grass 4s ease-in-out infinite;
 }
 
 .hero-pixel.star {
   background: var(--pure-white);
+  animation: pixel-twinkle 2.2s ease-in-out infinite;
+}
+
+.hero-pixel.star:nth-child(odd) {
+  animation-delay: 0.4s;
+}
+
+.hero-pixel.star:nth-child(3n) {
+  animation-delay: 0.9s;
 }
 
 .hero-pixel.moon {
   background: var(--pure-white);
+  animation: pixel-moon 3s ease-in-out infinite;
 }
 
 .hero-pixel.char {
   background: #ff7aa2;
+  animation: pixel-bounce 1.6s ease-in-out infinite;
+}
+
+/* 首页像素块：鼠标悬停与点击反馈 */
+.hero-preview .hero-pixel {
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hero-preview .hero-pixel:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}
+.hero-preview .hero-pixel:active {
+  filter: brightness(0.88);
+  transform: scale(0.94);
 }
 
 .section-title {
@@ -482,6 +520,16 @@ section {
 .log-list li,
 .tool-list li {
   margin-bottom: 0.4rem;
+}
+
+.tool-list-link {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}
+
+.tool-list-link:hover {
+  color: var(--pure-white);
+  text-decoration: underline;
 }
 
 .log-tag {
@@ -543,7 +591,59 @@ section {
   margin-left: 0;
 }
 
+/* 关于页 / 首页关于区块共用：作品 Logo、引用等 */
+.about-logo-wrap {
+  margin: 1.5rem auto;
+  max-width: 280px;
+  padding: 12px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(255,255,255,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.about-logo-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.about-section p {
+  font-size: 0.92rem;
+  color: var(--text-sub);
+  line-height: 1.75;
+  margin-bottom: 0.75rem;
+}
+.about-section p:last-child {
+  margin-bottom: 0;
+}
+.about-game-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.about-quote {
+  margin-top: 1.25rem;
+  padding-left: 1rem;
+  border-left: 4px solid var(--accent-yellow);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.7;
+  opacity: 0.95;
+}
+
 footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
   border-top: var(--pixel-border) solid #000000;
   background: #050716;
   color: var(--text-sub);
@@ -584,3 +684,56 @@ footer {
   }
 }
 
+/* 首页像素小动画 */
+@keyframes pixel-twinkle {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.5; filter: brightness(0.85); }
+}
+
+@keyframes pixel-moon {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+@keyframes pixel-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes pixel-grass {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+}
+
+/* ========== 子页切换过渡：减少整页刷新闪烁 ========== */
+/* 跨文档 View Transitions（Chrome 126+、Edge、Safari 18.2+ 等） */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: vt-fade-out 0.2s ease-out forwards;
+}
+::view-transition-new(root) {
+  animation: vt-fade-in 0.25s ease-out forwards;
+}
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 不支持 View Transitions 时的降级：首屏淡入 + 点击后淡出再跳转 */
+body.page-loading main {
+  opacity: 0;
+}
+body.page-ready main {
+  opacity: 1;
+  transition: opacity 0.22s ease-out;
+}
+body.page-transition-out main {
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+}
