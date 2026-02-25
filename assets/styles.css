@@ -25,7 +25,7 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -35,6 +35,7 @@ body {
   color: var(--text-main);
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 /* 像素感：用纯色块 + 粗边框 + 阶梯阴影 */
@@ -85,11 +86,19 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--footer-height);
+  /* 固定页脚占位：用块级 ::after 保证滚动区底部留白，避免内容被遮挡 */
+  padding-bottom: 0;
   background:
     linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.6)),
     radial-gradient(circle at 20% 0, rgba(255, 255, 255, 0.18), transparent 55%),
     radial-gradient(circle at 80% 0, rgba(255, 255, 255, 0.14), transparent 50%);
+}
+
+.page::after {
+  content: "";
+  display: block;
+  flex-shrink: 0;
+  height: calc(var(--footer-height) + 20px);
 }
 
 .nav-wrap {
@@ -341,6 +350,7 @@ nav {
     flex-direction: column;
     width: 100%;
     padding: 0.5rem 0 0.25rem;
+    align-items: flex-end;
   }
 
   .nav-menu.open {
@@ -349,14 +359,20 @@ nav {
 
   .nav-group {
     width: 100%;
-    align-items: flex-start;
+    align-items: flex-end;
     flex-direction: column;
   }
 
   .nav-dropdown {
     position: static;
     margin-top: 0.3rem;
-    width: 100%;
+    width: fit-content;
+    min-width: min-content;
+    margin-left: auto;
+  }
+
+  .nav-dropdown-link {
+    text-align: right;
   }
 }
 
@@ -644,6 +660,7 @@ footer {
   left: 0;
   right: 0;
   z-index: 15;
+  min-height: var(--footer-height);
   border-top: var(--pixel-border) solid #000000;
   background: #050716;
   color: var(--text-sub);
@@ -671,6 +688,14 @@ footer {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --footer-height: 100px;
+  }
+
+  .page::after {
+    height: calc(var(--footer-height) + 28px);
+  }
+
   .hero {
     grid-template-columns: minmax(0, 1fr);
   }
