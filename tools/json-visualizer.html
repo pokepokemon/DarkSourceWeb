@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Json可视化 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .tool-section {
+      margin-bottom: 1.2rem;
+    }
+
+    .tool-section label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.35rem;
+    }
+
+    .tool-textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 0.6rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      background: rgba(0, 0, 0, 0.4);
+      border: 4px solid #000000;
+      color: var(--text-main);
+      resize: vertical;
+    }
+
+    .tool-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+    }
+
+    .tool-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    #json-tree {
+      min-height: 120px;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 4px solid #000000;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    .jv-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0.35rem 0.6rem;
+      padding: 0.2rem 0;
+      border-left: 2px solid transparent;
+    }
+
+    .jv-row:hover {
+      background: rgba(110, 197, 255, 0.08);
+      border-left-color: var(--accent-cyan);
+    }
+
+    .jv-toggle {
+      width: 18px;
+      height: 18px;
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.9rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .jv-toggle:hover {
+      color: var(--accent-cyan);
+    }
+
+    .jv-placeholder {
+      width: 18px;
+      flex-shrink: 0;
+    }
+
+    .jv-key {
+      color: var(--accent-yellow);
+      margin-right: 0.25rem;
+    }
+
+    .jv-key.jv-array-key {
+      color: var(--accent-cyan);
+    }
+
+    .jv-type {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.35rem;
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--text-sub);
+      border-radius: 4px;
+    }
+
+    .jv-value {
+      color: var(--accent-pink);
+    }
+
+    .jv-value.jv-null {
+      color: var(--text-sub);
+    }
+
+    .jv-value.jv-bool {
+      color: var(--accent-orange);
+    }
+
+    .jv-value.jv-num {
+      color: var(--accent-cyan);
+    }
+
+    .jv-actions {
+      display: inline-flex;
+      gap: 0.25rem;
+      margin-left: auto;
+    }
+
+    .jv-btn {
+      padding: 0.2rem 0.4rem;
+      font-size: 0.7rem;
+      border: 2px solid #000;
+      background: var(--night-blue-soft);
+      color: var(--text-sub);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .jv-btn:hover {
+      color: var(--pure-white);
+      background: rgba(110, 197, 255, 0.25);
+    }
+
+    .jv-btn.jv-btn-add {
+      background: rgba(53, 208, 127, 0.25);
+      color: var(--grass-green);
+    }
+
+    .jv-btn.jv-btn-add:hover {
+      background: rgba(53, 208, 127, 0.4);
+      color: var(--pure-white);
+    }
+
+    .jv-btn.jv-btn-del:hover {
+      background: rgba(255, 122, 162, 0.3);
+      color: var(--pure-white);
+    }
+
+    .jv-children {
+      margin-left: 1.25rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 0.5rem;
+    }
+
+    .jv-empty {
+      color: var(--text-sub);
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+
+    .jv-parse-error {
+      color: var(--accent-pink);
+      padding: 0.5rem 0;
+    }
+
+    .jv-input-inline {
+      min-width: 80px;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.82rem;
+      font-family: inherit;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid #000;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">Json可视化</h1>
+        <p class="section-sub">
+          将 JSON 解析为树状结构展示，支持展开/折叠；可对节点进行<strong>添加</strong>、<strong>修改</strong>、<strong>删除</strong>，修改后可通过「导出」得到新 JSON。
+        </p>
+
+        <div class="tool-section">
+          <label for="json-input">JSON 输入</label>
+          <textarea
+            id="json-input"
+            class="tool-textarea"
+            placeholder='{"name": "示例", "count": 1, "items": []}'
+          ></textarea>
+          <div class="tool-actions">
+            <button type="button" class="pixel-button" id="parse-btn">解析并生成树</button>
+            <button type="button" class="pixel-button" id="load-file-btn">从文件加载</button>
+            <input type="file" id="file-input" accept=".json,application/json" style="display:none;" />
+          </div>
+          <p class="tool-hint">粘贴 JSON 后点击「解析并生成树」；支持对象与数组的嵌套。</p>
+        </div>
+
+        <div class="tool-section">
+          <label>树状结构</label>
+          <div id="json-tree" class="jv-empty">解析后将在此显示树状结构，可对节点进行增删改。</div>
+          <div class="tool-actions" style="margin-top: 0.6rem;">
+            <button type="button" class="pixel-button" id="export-btn" disabled>导出 JSON</button>
+            <button type="button" class="pixel-button" id="copy-btn" disabled>复制到剪贴板</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script src="../assets/json-visualizer.js"></script>
+</body>
+</html>
