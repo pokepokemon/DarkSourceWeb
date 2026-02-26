@@ -114,6 +114,218 @@
       background: #000000;
     }
 
+    .devlog-images img {
+      cursor: pointer;
+    }
+
+    /* 平铺图片点击大图浮窗 */
+    .devlog-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      box-sizing: border-box;
+      visibility: hidden;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .devlog-lightbox.is-open {
+      visibility: visible;
+      pointer-events: auto;
+      opacity: 1;
+    }
+    .devlog-lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
+    .devlog-lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .devlog-lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: scale(1.05);
+    }
+    .devlog-lightbox-close svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    /* 轮播：仅当 img_title.length === images.length 且 >0 时显示，在文本下方 */
+    .devlog-carousel-wrap {
+      margin-top: 0.6rem;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .devlog-carousel-title-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      padding: 0.6rem 0.75rem;
+      background: rgba(0, 0, 0, 0.65);
+      color: var(--pure-white);
+      font-size: 1.05rem;
+      line-height: 1.4;
+      min-height: 2.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .devlog-carousel-viewport {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      cursor: grab;
+      user-select: none;
+      min-height: 200px;
+      background: #0b1030;
+    }
+    .devlog-carousel-viewport:active { cursor: grabbing; }
+    .devlog-carousel-track {
+      display: flex;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .devlog-carousel-track.is-dragging { transition: none; }
+    .devlog-carousel-slide {
+      flex: 0 0 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #0b1030;
+    }
+    .devlog-carousel-slide img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      vertical-align: middle;
+    }
+    .devlog-carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+    .devlog-carousel-dots button {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.35);
+      cursor: pointer;
+      padding: 0;
+      font-size: 0;
+      line-height: 0;
+      color: transparent;
+      transition: background 0.25s ease, transform 0.2s ease;
+    }
+    .devlog-carousel-dots button:hover { background: rgba(255,255,255,0.5); }
+    .devlog-carousel-dots button.is-active {
+      background: var(--accent-yellow);
+      transform: scale(1.2);
+    }
+    .devlog-carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      opacity: 0.9;
+      transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+    }
+    .devlog-carousel-arrow:hover {
+      background: rgba(0,0,0,0.7);
+      opacity: 1;
+      transform: translateY(-50%) scale(1.05);
+    }
+    .devlog-carousel-arrow.prev { left: 8px; }
+    .devlog-carousel-arrow.next { right: 8px; }
+    .devlog-carousel-arrow svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .devlog-carousel-zoom {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .devlog-carousel-zoom:hover {
+      background: rgba(0,0,0,0.7);
+      transform: scale(1.08);
+    }
+    .devlog-carousel-zoom svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+    }
+
     .pixel-button-row {
       display: flex;
       flex-wrap: wrap;
@@ -156,6 +368,13 @@
     </footer>
   </div>
 
+  <div class="devlog-lightbox" id="devlogLightbox" role="dialog" aria-modal="true" aria-label="查看大图">
+    <button type="button" class="devlog-lightbox-close" id="devlogLightboxClose" aria-label="关闭">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <img id="devlogLightboxImg" src="" alt="" />
+  </div>
+
   <script src="../assets/config.js"></script>
   <script src="../assets/include.js"></script>
   <script>
@@ -164,6 +383,131 @@
       const normalized = dateStr.replace(/-/g, "");
       const num = Number(normalized);
       return Number.isFinite(num) ? num : 0;
+    }
+
+    function initDevlogCarousels(container) {
+      if (!container) return;
+      container.querySelectorAll(".devlog-carousel-wrap").forEach((wrap) => {
+        const viewport = wrap.querySelector(".devlog-carousel-viewport");
+        const track = wrap.querySelector(".devlog-carousel-track");
+        const dotsContainer = wrap.querySelector(".devlog-carousel-dots");
+        const titleBar = wrap.querySelector(".devlog-carousel-title-bar");
+        const btnPrev = wrap.querySelector(".devlog-carousel-arrow.prev");
+        const btnNext = wrap.querySelector(".devlog-carousel-arrow.next");
+        const btnZoom = wrap.querySelector(".devlog-carousel-zoom");
+        let titles = [];
+        try {
+          const raw = wrap.getAttribute("data-img-titles");
+          if (raw) titles = JSON.parse(raw);
+        } catch (e) {}
+        if (!track || !viewport) return;
+        const slides = track.querySelectorAll(".devlog-carousel-slide");
+        const dots = dotsContainer ? dotsContainer.querySelectorAll("button") : [];
+        const total = slides.length;
+        if (total === 0) return;
+
+        let index = 0;
+        let dragStartX = 0;
+        let dragBaseIndex = 0;
+        let isDragging = false;
+
+        function applyTransform(percent) {
+          track.style.transform = "translateX(" + percent + "%)";
+        }
+        function goTo(i) {
+          index = (i + total) % total;
+          track.classList.remove("is-dragging");
+          applyTransform(-index * 100);
+          dots.forEach((dot, d) => {
+            dot.classList.toggle("is-active", d === index);
+            dot.setAttribute("aria-selected", d === index ? "true" : "false");
+          });
+          if (titleBar && titles[index] !== undefined) titleBar.textContent = titles[index];
+        }
+
+        goTo(0);
+        if (dotsContainer) dots.forEach((dot, d) => { dot.addEventListener("click", () => goTo(d)); });
+        if (btnPrev) btnPrev.addEventListener("click", () => goTo(index - 1));
+        if (btnNext) btnNext.addEventListener("click", () => goTo(index + 1));
+
+        if (btnZoom) {
+          const lightbox = document.getElementById("devlogLightbox");
+          const lightboxImg = document.getElementById("devlogLightboxImg");
+          const lightboxClose = document.getElementById("devlogLightboxClose");
+          btnZoom.addEventListener("click", () => {
+            const slide = slides[index];
+            const img = slide ? slide.querySelector("img") : null;
+            if (!img || !lightbox || !lightboxImg) return;
+            lightboxImg.src = img.src || img.getAttribute("src") || "";
+            lightboxImg.alt = img.alt || "";
+            lightbox.classList.add("is-open");
+            document.body.style.overflow = "hidden";
+            if (lightboxClose) lightboxClose.focus();
+          });
+        }
+
+        viewport.addEventListener("mousedown", (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          isDragging = true;
+          dragStartX = e.clientX;
+          dragBaseIndex = index;
+          track.classList.add("is-dragging");
+        });
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging) return;
+          const w = viewport.offsetWidth;
+          if (!w) return;
+          const deltaPx = e.clientX - dragStartX;
+          const deltaPercent = (deltaPx / w) * 100;
+          const basePercent = -dragBaseIndex * 100;
+          applyTransform(Math.max(-(total - 1) * 100, Math.min(0, basePercent + deltaPercent)));
+        });
+        document.addEventListener("mouseup", (e) => {
+          if (e.button !== 0 || !isDragging) return;
+          isDragging = false;
+          const w = viewport.offsetWidth;
+          const deltaPx = e.clientX - dragStartX;
+          const deltaPercent = w ? (deltaPx / w) * 100 : 0;
+          const threshold = 15;
+          if (deltaPercent > threshold && dragBaseIndex > 0) goTo(dragBaseIndex - 1);
+          else if (deltaPercent < -threshold && dragBaseIndex < total - 1) goTo(dragBaseIndex + 1);
+          else goTo(dragBaseIndex);
+        });
+      });
+    }
+
+    function initDevlogImagesLightbox(container) {
+      const lightbox = document.getElementById("devlogLightbox");
+      const lightboxImg = document.getElementById("devlogLightboxImg");
+      const lightboxClose = document.getElementById("devlogLightboxClose");
+      if (!lightbox || !lightboxImg) return;
+
+      function openLightbox(src, alt) {
+        lightboxImg.src = src;
+        lightboxImg.alt = alt || "";
+        lightbox.classList.add("is-open");
+        document.body.style.overflow = "hidden";
+        if (lightboxClose) lightboxClose.focus();
+      }
+      function closeLightbox() {
+        lightbox.classList.remove("is-open");
+        document.body.style.overflow = "";
+      }
+
+      if (container) {
+        container.addEventListener("click", (e) => {
+          const img = e.target && e.target.closest && e.target.closest(".devlog-images img");
+          if (!img) return;
+          e.preventDefault();
+          openLightbox(img.src || img.getAttribute("src"), img.alt || "");
+        });
+      }
+      if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
+      if (lightbox) lightbox.addEventListener("click", (e) => { if (e.target === lightbox) closeLightbox(); });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && lightbox && lightbox.classList.contains("is-open")) closeLightbox();
+      });
     }
 
     async function loadDevlog() {
@@ -206,6 +550,10 @@
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;");
         }
+        function getImageSrc(img) {
+          if (typeof img === "string") return img;
+          return img && img.src ? img.src : "";
+        }
         function summaryToHtml(summary) {
           if (Array.isArray(summary)) {
             return summary
@@ -216,31 +564,63 @@
           return '<div class="devlog-summary-line">' + escapeHtml(summary ?? "") + "</div>";
         }
 
-        // 3. 渲染：按日期分组，从新到旧
+        // 3. 渲染：按日期分组，从新到旧。img_title 与 images 长度一致且 >0 时显示轮播（在文本下方），否则有图则平铺并可点开大图
+        let carouselId = 0;
         const html = Array.from(groups.entries())
           .map(([date, groupItems]) => {
             const groupHtml = groupItems
               .map((item) => {
                 const summaryHtml = summaryToHtml(item.summary);
                 const images = Array.isArray(item.images) ? item.images : [];
+                const imgTitle = Array.isArray(item.img_title) ? item.img_title : [];
+                const showCarousel = imgTitle.length === images.length && images.length > 0;
 
-                const imagesHtml = images
-                  .map((img) => {
-                    if (!img) return "";
-                    if (typeof img === "string") {
-                      return '<img src="' + escapeHtml(img) + '" alt="devlog image" />';
-                    }
-                    const src = img.src ?? "";
-                    if (!src) return "";
-                    const alt = img.alt ?? "devlog image";
-                    return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '" />';
-                  })
-                  .join("");
+                let mediaBlock = "";
+                if (showCarousel) {
+                  const id = "devlog-carousel-" + carouselId++;
+                  const titlesJson = escapeHtml(JSON.stringify(imgTitle));
+                  const slidesHtml = images
+                    .map((img) => {
+                      const src = getImageSrc(img);
+                      if (!src) return "";
+                      const alt = typeof img === "string" ? "devlog image" : (img.alt || "devlog image");
+                      return '<div class="devlog-carousel-slide"><img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '" /></div>';
+                    })
+                    .join("");
+                  const dotsHtml = images
+                    .map((_, i) => '<button type="button" role="tab" aria-label="第 ' + (i + 1) + ' 张" class="' + (i === 0 ? "is-active " : "") + '">' + (i + 1) + "</button>")
+                    .join("");
+                  mediaBlock =
+                    '<div class="devlog-carousel-wrap" data-carousel-id="' + id + '" data-img-titles="' + titlesJson + '">' +
+                    '<div class="devlog-carousel-viewport">' +
+                    '<button type="button" class="devlog-carousel-arrow prev" aria-label="上一张"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+                    '<button type="button" class="devlog-carousel-arrow next" aria-label="下一张"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>' +
+                    '<button type="button" class="devlog-carousel-zoom" aria-label="放大查看"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></button>' +
+                    '<div class="devlog-carousel-track">' + slidesHtml + "</div>" +
+                    '<div class="devlog-carousel-title-bar" aria-live="polite">' + escapeHtml(imgTitle[0] || "") + '</div>' +
+                    "</div>" +
+                    '<div class="devlog-carousel-dots" role="tablist">' + dotsHtml + "</div>" +
+                    "</div>";
+                } else if (images.length > 0) {
+                  const imagesHtml = images
+                    .map((img) => {
+                      if (!img) return "";
+                      if (typeof img === "string") {
+                        return '<img src="' + escapeHtml(img) + '" alt="devlog image" />';
+                      }
+                      const src = img.src ?? "";
+                      if (!src) return "";
+                      const alt = img.alt ?? "devlog image";
+                      return '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '" />';
+                    })
+                    .join("");
+                  mediaBlock = '<div class="devlog-images">' + imagesHtml + "</div>";
+                }
 
                 return `
                   <li class="devlog-item">
                     <div class="devlog-summary">${summaryHtml}</div>
-                    ${imagesHtml ? '<div class="devlog-images">' + imagesHtml + "</div>" : ""}
+                    ${mediaBlock}
                   </li>
                 `;
               })
@@ -261,6 +641,8 @@
           .join("");
 
         listEl.innerHTML = html;
+        initDevlogCarousels(listEl);
+        initDevlogImagesLightbox(listEl);
       } catch (err) {
         console.error("加载 devlog/config.json 失败：", err);
         if (window.location.protocol === "file:") {
