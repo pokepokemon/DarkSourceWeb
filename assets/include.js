@@ -18,6 +18,7 @@
 
   function currentNavId() {
     if (pathname.indexOf("json-visualizer") !== -1) return "tools-json";
+    if (pathname.indexOf("perfect-pixel") !== -1) return "tools-pixel";
     if (pathname.indexOf("tab-to-devlog") !== -1) return "tools-tab";
     if (pathname.indexOf("devlog") !== -1) return "devlog";
     if (pathname.indexOf("privacy") !== -1) return "privacy";
@@ -53,7 +54,7 @@
     var toolsLabel = container.querySelector(".nav-group-label[data-view='tools']");
     if (infoLabel && ["devlog", "game-intro", "privacy"].indexOf(currentId) !== -1) infoLabel.classList.add("active");
     else if (infoLabel) infoLabel.classList.remove("active");
-    if (toolsLabel && (currentId === "tools-tab" || currentId === "tools-json")) toolsLabel.classList.add("active");
+    if (toolsLabel && (currentId === "tools-tab" || currentId === "tools-json" || currentId === "tools-pixel")) toolsLabel.classList.add("active");
     else if (toolsLabel) toolsLabel.classList.remove("active");
   }
 

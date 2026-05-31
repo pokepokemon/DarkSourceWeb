@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>完美像素 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .tool-section {
+      margin-bottom: 1.2rem;
+    }
+
+    .tool-section label,
+    .pp-panel-title {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.35rem;
+    }
+
+    .tool-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    .tool-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+      align-items: center;
+    }
+
+    .pp-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .pp-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pp-panel {
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pp-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pp-preview img {
+      max-width: 100%;
+      max-height: 320px;
+      image-rendering: pixelated;
+    }
+
+    .pp-placeholder {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    .pp-drop-zone {
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .pp-drop-zone:hover,
+    .pp-drop-zone.pp-drag-over {
+      border-color: var(--accent-cyan);
+      background: rgba(110, 197, 255, 0.08);
+    }
+
+    .pp-error {
+      color: var(--accent-pink);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .pp-meta {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      margin-top: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .pp-select {
+      padding: 0.45rem 0.6rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+      min-width: 140px;
+    }
+
+    .pp-slider-wrap {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .pp-slider-wrap input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-cyan);
+    }
+
+    .pp-debug {
+      margin-top: 1rem;
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+    }
+
+    .pp-debug-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.6rem;
+    }
+
+    .pp-debug-item canvas {
+      width: 100%;
+      height: auto;
+      border: 2px solid #000;
+      background: rgba(0, 0, 0, 0.5);
+      image-rendering: pixelated;
+    }
+
+    .pp-debug-label {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-bottom: 0.25rem;
+    }
+
+    .pp-credit {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+    }
+
+    .pp-credit a {
+      color: var(--accent-cyan);
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">完美像素 Perfect Pixel</h1>
+        <p class="section-sub">
+          自动检测像素风格图片的网格尺寸，将 AI 生成或变形的像素图还原为对齐、清晰的完美像素。
+          算法参考 <a href="https://github.com/theamusing/perfectPixel" target="_blank" rel="noopener">perfectPixel</a> 项目及
+          <a href="https://theamusing.github.io/perfectPixel_webdemo/" target="_blank" rel="noopener">Web Demo</a>。
+          推荐输入尺寸 512–1024 像素。
+        </p>
+
+        <div class="pp-workspace">
+          <div class="pp-panel">
+            <span class="pp-panel-title">原图</span>
+            <div id="drop-zone" class="pp-preview pp-drop-zone">
+              <img id="original-img" alt="原图预览" hidden />
+              <p id="original-placeholder" class="pp-placeholder">点击或拖拽上传像素风格图片</p>
+            </div>
+            <input type="file" id="file-input" accept="image/*" hidden />
+            <div class="tool-actions">
+              <label for="sampling-method">采样方式</label>
+              <select id="sampling-method" class="pp-select">
+                <option value="center">Center Sample（中心采样）</option>
+                <option value="majority">Majority Cluster（主色聚类）</option>
+              </select>
+              <button type="button" class="pixel-button" id="process-btn" disabled>生成完美像素</button>
+            </div>
+          </div>
+
+          <div class="pp-panel">
+            <span class="pp-panel-title">输出结果</span>
+            <div class="pp-preview">
+              <img id="result-img" alt="处理结果" hidden />
+              <p id="result-placeholder" class="pp-placeholder">处理后将在此显示结果</p>
+              <p id="result-error" class="pp-error" hidden></p>
+            </div>
+            <p id="result-meta" class="pp-meta" hidden></p>
+            <div class="tool-actions">
+              <div class="pp-slider-wrap">
+                <label for="download-scale">导出放大倍率</label>
+                <input type="range" id="download-scale" min="1" max="32" value="4" step="1" />
+              </div>
+              <button type="button" class="pixel-button" id="download-btn" disabled>下载 PNG</button>
+            </div>
+            <p id="scale-label" class="tool-hint">导出倍率 4x</p>
+          </div>
+        </div>
+
+        <div class="tool-section" style="margin-top: 1rem;">
+          <label>
+            <input type="checkbox" id="debug-toggle" />
+            显示网格诊断（FFT 频谱与周期性分析）
+          </label>
+          <div id="debug-panel" class="pp-debug" hidden>
+            <div class="pp-debug-grid">
+              <div class="pp-debug-item">
+                <div class="pp-debug-label">FFT Magnitude</div>
+                <canvas id="mag-canvas"></canvas>
+              </div>
+              <div class="pp-debug-item">
+                <div class="pp-debug-label">Vertical Periodicity</div>
+                <canvas id="row-chart"></canvas>
+              </div>
+              <div class="pp-debug-item">
+                <div class="pp-debug-label">Horizontal Periodicity</div>
+                <canvas id="col-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="pp-credit">
+          基于 MIT 开源项目
+          <a href="https://github.com/theamusing/perfectPixel" target="_blank" rel="noopener">theamusing/perfectPixel</a>
+          的浏览器端实现，处理在本地完成，图片不会上传至服务器。
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script src="../assets/perfect-pixel-ndarray.js"></script>
+  <script src="../assets/perfect-pixel-core.js"></script>
+  <script src="../assets/perfect-pixel-tool.js"></script>
+</body>
+</html>
