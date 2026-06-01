@@ -20,7 +20,9 @@
   var downloadBtn = document.getElementById("download-btn");
   var samplingSelect = document.getElementById("sampling-method");
   var scaleSlider = document.getElementById("download-scale");
+  var scaleInput = document.getElementById("download-scale-input");
   var scaleLabel = document.getElementById("scale-label");
+  var maxProcessSelect = document.getElementById("max-process-dim");
   var debugToggle = document.getElementById("debug-toggle");
   var debugPanel = document.getElementById("debug-panel");
   var magCanvas = document.getElementById("mag-canvas");
@@ -55,8 +57,40 @@
     reader.readAsDataURL(file);
   }
 
+  function getConfig() {
+    return window.PerfectPixelConfig || {};
+  }
+
+  function getMaxProcessDim() {
+    if (maxProcessSelect) {
+      var v = parseInt(maxProcessSelect.value, 10);
+      if (!isNaN(v)) return v;
+    }
+    var cfg = getConfig();
+    return cfg.maxProcessDim != null ? cfg.maxProcessDim : 8192;
+  }
+
+  function getExportScale() {
+    if (scaleInput && scaleInput.value !== "") {
+      var n = parseInt(scaleInput.value, 10);
+      if (!isNaN(n) && n >= 1) return n;
+    }
+    return parseInt(scaleSlider.value, 10) || 4;
+  }
+
+  function syncScaleControls(fromSlider) {
+    var cfg = getConfig();
+    var maxSlider = cfg.maxExportScaleSlider != null ? cfg.maxExportScaleSlider : 512;
+    var scale = fromSlider
+      ? parseInt(scaleSlider.value, 10)
+      : getExportScale();
+    scale = Math.max(1, Math.min(maxSlider, scale));
+    scaleSlider.value = String(scale);
+    if (scaleInput) scaleInput.value = String(scale);
+  }
+
   function prepareImage(img) {
-    var maxDim = 1024;
+    var maxDim = getMaxProcessDim();
     var minThreshold = 64;
     var targetMin = 256;
     var w = img.width;
@@ -67,7 +101,7 @@
       w *= k;
       h *= k;
     }
-    if (Math.max(w, h) > maxDim) {
+    if (maxDim > 0 && Math.max(w, h) > maxDim) {
       var s = maxDim / Math.max(w, h);
       w = Math.round(w * s);
       h = Math.round(h * s);
@@ -190,8 +224,17 @@
         var data = new Float32Array(w * h * 4);
         for (var i = 0; i < imageData.data.length; i++) data[i] = imageData.data[i];
         var inputNd = PerfectPixelCore.createNdArray(data, [h, w, 4]);
+        var cfg = getConfig();
+        var maxFft = getMaxProcessDim();
+        if (maxFft <= 0) {
+          maxFft = cfg.maxFftDim || 16384;
+        } else {
+          maxFft = Math.max(maxFft, cfg.maxFftDim || 8192);
+        }
         var result = getPerfectPixel(inputNd, {
-          sampleMethod: samplingSelect.value
+          sampleMethod: samplingSelect.value,
+          maxFftDim: maxFft,
+          maxPixelSize: cfg.maxPixelSize
         });
         debugData = result.debugData || null;
 
@@ -233,15 +276,23 @@
   }
 
   function updateScaleLabel() {
-    var scale = parseInt(scaleSlider.value, 10);
+    var scale = getExportScale();
+    var cfg = getConfig();
+    var maxCanvas = cfg.maxCanvasDim || 16384;
     if (refinedSize) {
+      var outW = Math.round(refinedSize.w * scale);
+      var outH = Math.round(refinedSize.h * scale);
       var text = "网格 " + refinedSize.w + " × " + refinedSize.h +
-        " | 预览 " + Math.round(refinedSize.w * scale) + " × " + Math.round(refinedSize.h * scale) +
+        " | 预览约 " + outW + " × " + outH +
         " | 导出倍率 " + scale + "x";
+      if (outW > maxCanvas || outH > maxCanvas) {
+        text += "（超过浏览器单边上限 " + maxCanvas + "，请降低倍率）";
+      }
       scaleLabel.textContent = text;
       resultMeta.textContent = text;
       resultImg.style.imageRendering = "pixelated";
-      resultImg.style.width = Math.min(refinedSize.w * scale, 480) + "px";
+      var previewCap = Math.max(480, Math.min(maxCanvas, 2048));
+      resultImg.style.width = Math.min(refinedSize.w * scale, previewCap) + "px";
       resultImg.style.height = "auto";
     } else {
       scaleLabel.textContent = "导出倍率 " + scale + "x";
@@ -250,13 +301,30 @@
 
   function downloadImage() {
     if (!processedDataUrl) return;
-    var scale = parseInt(scaleSlider.value, 10);
+    var scale = getExportScale();
+    var cfg = getConfig();
+    var maxExport = cfg.maxExportScale || 8192;
+    var maxCanvas = cfg.maxCanvasDim || 16384;
+    if (scale > maxExport) {
+      alert("导出倍率不能超过 " + maxExport);
+      return;
+    }
     var img = new Image();
     img.onload = function () {
+      var outW = img.width * scale;
+      var outH = img.height * scale;
+      if (outW > maxCanvas || outH > maxCanvas) {
+        alert("导出尺寸 " + outW + "×" + outH + " 超过浏览器 canvas 单边上限约 " + maxCanvas + "，请降低倍率或网格尺寸。");
+        return;
+      }
       var canvas = document.createElement("canvas");
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
+      canvas.width = outW;
+      canvas.height = outH;
       var ctx = canvas.getContext("2d");
+      if (!ctx) {
+        alert("无法创建画布，尺寸可能过大。");
+        return;
+      }
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       var link = document.createElement("a");
@@ -287,9 +355,51 @@
 
   processBtn.addEventListener("click", processImage);
   downloadBtn.addEventListener("click", downloadImage);
-  scaleSlider.addEventListener("input", updateScaleLabel);
-  scaleSlider.addEventListener("change", updateScaleLabel);
-  updateScaleLabel();
+  function onScaleSliderInput() {
+    syncScaleControls(true);
+    updateScaleLabel();
+  }
+
+  function onScaleInputChange() {
+    var cfg = getConfig();
+    var maxExport = cfg.maxExportScale || 8192;
+    var n = parseInt(scaleInput.value, 10);
+    if (!isNaN(n)) {
+      n = Math.max(1, Math.min(maxExport, n));
+      scaleInput.value = String(n);
+      var maxSlider = cfg.maxExportScaleSlider != null ? cfg.maxExportScaleSlider : 512;
+      scaleSlider.value = String(Math.min(n, maxSlider));
+    }
+    updateScaleLabel();
+  }
+
+  (function initScaleControls() {
+    var cfg = getConfig();
+    var maxSlider = cfg.maxExportScaleSlider != null ? cfg.maxExportScaleSlider : 512;
+    var def = cfg.defaultExportScale != null ? cfg.defaultExportScale : 4;
+    scaleSlider.max = String(maxSlider);
+    scaleSlider.value = String(Math.min(def, maxSlider));
+    if (scaleInput) {
+      scaleInput.min = "1";
+      scaleInput.max = String(cfg.maxExportScale || 8192);
+      scaleInput.value = String(def);
+    }
+    updateScaleLabel();
+  })();
+
+  scaleSlider.addEventListener("input", onScaleSliderInput);
+  scaleSlider.addEventListener("change", onScaleSliderInput);
+  if (scaleInput) {
+    scaleInput.addEventListener("input", onScaleInputChange);
+    scaleInput.addEventListener("change", onScaleInputChange);
+  }
+  if (maxProcessSelect) {
+    maxProcessSelect.addEventListener("change", function () {
+      var cfg = getConfig();
+      var v = getMaxProcessDim();
+      if (v > 0) cfg.maxFftDim = v;
+    });
+  }
   debugToggle.addEventListener("change", function () {
     debugPanel.hidden = !debugToggle.checked;
     if (debugToggle.checked && debugData) renderDebug();

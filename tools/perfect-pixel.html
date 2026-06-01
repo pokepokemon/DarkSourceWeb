@@ -134,6 +134,37 @@
       accent-color: var(--accent-cyan);
     }
 
+    .pp-scale-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.5rem 0.75rem;
+    }
+
+    .pp-scale-input {
+      width: 5rem;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+    }
+
+    .pp-advanced {
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 2px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .pp-advanced select {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+      margin-left: 0.35rem;
+    }
+
     .pp-debug {
       margin-top: 1rem;
       background: rgba(0, 0, 0, 0.35);
@@ -186,7 +217,7 @@
           自动检测像素风格图片的网格尺寸，将 AI 生成或变形的像素图还原为对齐、清晰的完美像素。
           算法参考 <a href="https://github.com/theamusing/perfectPixel" target="_blank" rel="noopener">perfectPixel</a> 项目及
           <a href="https://theamusing.github.io/perfectPixel_webdemo/" target="_blank" rel="noopener">Web Demo</a>。
-          推荐输入尺寸 512–1024 像素。
+          默认最长边处理上限 8192；可在高级选项中选择 4096 / 8192 / 不缩小原图。导出倍率最高 8192（受浏览器 canvas 单边约 16384 限制）。
         </p>
 
         <div class="pp-workspace">
@@ -218,12 +249,27 @@
             <div class="tool-actions">
               <div class="pp-slider-wrap">
                 <label for="download-scale">导出放大倍率</label>
-                <input type="range" id="download-scale" min="1" max="32" value="4" step="1" />
+                <div class="pp-scale-row">
+                  <input type="range" id="download-scale" min="1" max="512" value="4" step="1" />
+                  <label class="pp-debug-label" for="download-scale-input">精确倍率</label>
+                  <input type="number" id="download-scale-input" class="pp-scale-input" min="1" max="8192" value="4" step="1" />
+                </div>
               </div>
               <button type="button" class="pixel-button" id="download-btn" disabled>下载 PNG</button>
             </div>
             <p id="scale-label" class="tool-hint">导出倍率 4x</p>
           </div>
+        </div>
+
+        <div class="tool-section pp-advanced">
+          <label for="max-process-dim">处理时最长边上限</label>
+          <select id="max-process-dim">
+            <option value="1024">1024（与原 Demo 接近，省内存）</option>
+            <option value="4096">4096</option>
+            <option value="8192" selected>8192（默认）</option>
+            <option value="0">不缩小（使用原图尺寸，大图较慢）</option>
+          </select>
+          <p class="tool-hint">仅影响网格检测与采样所用分辨率；导出倍率在上方单独设置。</p>
         </div>
 
         <div class="tool-section" style="margin-top: 1rem;">
@@ -264,6 +310,7 @@
 
   <script src="../assets/config.js"></script>
   <script src="../assets/include.js"></script>
+  <script src="../assets/perfect-pixel-config.js"></script>
   <script src="../assets/perfect-pixel-ndarray.js"></script>
   <script src="../assets/perfect-pixel-core.js"></script>
   <script src="../assets/perfect-pixel-tool.js"></script>

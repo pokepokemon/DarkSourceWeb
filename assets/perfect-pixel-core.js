@@ -105,11 +105,30 @@
     return { gx: conv2dSame(gray, kx), gy: conv2dSame(gray, ky) };
   }
 
-  function computeFftMagnitude(grayImage) {
+  function resolveMaxFftDim(options) {
+    var cfg = (typeof global !== "undefined" && global.PerfectPixelConfig) || {};
+    var cap = (options && options.maxFftDim != null)
+      ? options.maxFftDim
+      : (cfg.maxFftDim != null ? cfg.maxFftDim : 8192);
+    return cap > 0 ? cap : 8192;
+  }
+
+  function resolveMaxPixelSize(W, H, options) {
+    if (options && options.maxPixelSize != null && options.maxPixelSize > 0) {
+      return options.maxPixelSize;
+    }
+    var cfg = (typeof global !== "undefined" && global.PerfectPixelConfig) || {};
+    if (cfg.maxPixelSize != null && cfg.maxPixelSize > 0) {
+      return cfg.maxPixelSize;
+    }
+    return Math.max(20, Math.max(W, H));
+  }
+
+  function computeFftMagnitude(grayImage, maxFftDim) {
     var h = grayImage.shape[0];
     var w = grayImage.shape[1];
-    var ph = nextPow2(h, 1024);
-    var pw = nextPow2(w, 1024);
+    var ph = nextPow2(h, maxFftDim);
+    var pw = nextPow2(w, maxFftDim);
     var real = createNdArray(new Float32Array(ph * pw), [ph, pw]);
     var imag = createNdArray(new Float32Array(ph * pw), [ph, pw]);
     ops.assigns(real, 0);
@@ -429,9 +448,9 @@
     return { scaleCol: W / getIntv(pX), scaleRow: H / getIntv(pY) };
   }
 
-  function estimateGridFft(image) {
+  function estimateGridFft(image, maxFftDim) {
     var gray = rgbToGray(image);
-    var mag = computeFftMagnitude(gray);
+    var mag = computeFftMagnitude(gray, maxFftDim);
     var PH = mag.shape[0];
     var PW = mag.shape[1];
     var bandRow = Math.floor(PW / 2);
@@ -473,9 +492,12 @@
     options = options || {};
     var sampleMethod = options.sampleMethod || "center";
     var gridSize = options.gridSize || null;
-    var minSize = options.minSize !== undefined ? options.minSize : 4.0;
+    var cfg = (typeof global !== "undefined" && global.PerfectPixelConfig) || {};
+    var minSize = options.minSize !== undefined ? options.minSize : (cfg.minPixelSize != null ? cfg.minPixelSize : 4.0);
+    var maxFftDim = resolveMaxFftDim(options);
     var H = image.shape[0];
     var W = image.shape[1];
+    var maxPixelSize = resolveMaxPixelSize(W, H, options);
     var scaleCol = null;
     var scaleRow = null;
     var debugData;
@@ -484,7 +506,7 @@
       scaleCol = gridSize[0];
       scaleRow = gridSize[1];
     } else {
-      var est = estimateGridFft(image);
+      var est = estimateGridFft(image, maxFftDim);
       debugData = {
         smoothRow: est.smoothRow,
         smoothCol: est.smoothCol,
@@ -500,7 +522,6 @@
         var psx = W / est.scaleCol;
         var psy = H / est.scaleRow;
         var maxRatio = 1.5;
-        var maxPixelSize = 20.0;
         var ratio = psx / psy;
         if (Math.min(psx, psy) < minSize || Math.max(psx, psy) > maxPixelSize ||
             ratio > maxRatio || (1.0 / ratio) > maxRatio) {
