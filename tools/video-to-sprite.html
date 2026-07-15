@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>视频转序列图 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .tool-section {
+      margin-bottom: 1.2rem;
+    }
+
+    .tool-section label,
+    .vs-panel-title {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.35rem;
+    }
+
+    .tool-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    .tool-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+      align-items: center;
+    }
+
+    .vs-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .vs-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .vs-panel {
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vs-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .vs-preview video {
+      max-width: 100%;
+      max-height: 280px;
+      display: block;
+    }
+
+    .vs-preview img,
+    .vs-preview canvas {
+      max-width: 100%;
+      max-height: 280px;
+      image-rendering: pixelated;
+    }
+
+    .vs-placeholder {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    .vs-drop-zone {
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .vs-drop-zone:hover,
+    .vs-drop-zone.vs-drag-over {
+      border-color: var(--accent-cyan);
+      background: rgba(110, 197, 255, 0.08);
+    }
+
+    .vs-crop-wrap {
+      position: relative;
+      width: 100%;
+      max-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vs-crop-wrap video {
+      max-width: 100%;
+      max-height: 280px;
+      pointer-events: none;
+    }
+
+    #crop-overlay {
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+    }
+
+    #crop-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .vs-crop-preview-wrap {
+      margin-top: 0.6rem;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      padding: 0.5rem;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #crop-preview-canvas {
+      max-width: 100%;
+      max-height: 160px;
+      image-rendering: pixelated;
+      border: 2px solid #000;
+    }
+
+    .vs-crop-preview-label {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-bottom: 0.25rem;
+    }
+
+    .vs-input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+      align-items: flex-end;
+    }
+
+    .vs-input-group label {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .vs-input,
+    .vs-select {
+      padding: 0.4rem 0.55rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+      min-width: 4.5rem;
+    }
+
+    .vs-select {
+      min-width: 140px;
+    }
+
+    .vs-meta {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      margin-top: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .vs-status {
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      margin-top: 0.75rem;
+      min-height: 1.2em;
+    }
+
+    .vs-progress {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.35rem;
+    }
+
+    .vs-color-sample {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 5rem;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      font-family: ui-monospace, monospace;
+      border: 3px solid #000;
+      color: #fff;
+      text-shadow: 0 0 4px #000;
+    }
+
+    .vs-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .vs-step {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(110, 197, 255, 0.12);
+      border: 2px solid rgba(110, 197, 255, 0.35);
+      color: var(--accent-cyan);
+      letter-spacing: 0.05em;
+    }
+
+    .vs-credit {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+    }
+
+    .vs-credit a {
+      color: var(--accent-cyan);
+    }
+
+    #ref-canvas {
+      cursor: crosshair;
+      max-width: 100%;
+      max-height: 200px;
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">视频转序列图</h1>
+        <p class="section-sub">
+          在浏览器内将本地视频转换为序列帧资源：裁剪、按片段提帧、背景色抠图、预览动画，并导出精灵图 PNG、GIF、透明单帧 ZIP 或 Spine 动画包。
+          算法参考
+          <a href="https://github.com/mowangblog/video-timesheet-web" target="_blank" rel="noopener">video-timesheet-web</a>。
+          全部处理在本地完成，视频不会上传至服务器。
+        </p>
+
+        <div class="vs-steps" aria-hidden="true">
+          <span class="vs-step">1 上传</span>
+          <span class="vs-step">2 裁剪</span>
+          <span class="vs-step">3 提帧</span>
+          <span class="vs-step">4 抠图</span>
+          <span class="vs-step">5 预览</span>
+          <span class="vs-step">6 导出</span>
+        </div>
+
+        <div class="vs-workspace">
+          <div class="vs-panel">
+            <span class="vs-panel-title">1 · 上传与裁剪</span>
+            <div id="drop-zone" class="vs-preview vs-drop-zone">
+              <div id="video-placeholder" class="vs-placeholder">点击或拖拽上传视频（MP4 / WebM）</div>
+              <div id="crop-overlay" class="vs-crop-wrap" hidden>
+                <video id="video-preview" muted playsinline></video>
+                <canvas id="crop-canvas"></canvas>
+              </div>
+            </div>
+            <input type="file" id="file-input" accept="video/*" hidden />
+            <p id="meta-display" class="vs-meta" hidden></p>
+
+            <div class="tool-section" style="margin-top: 0.75rem;">
+              <label>裁剪区域（%）</label>
+              <div class="vs-input-row">
+                <div class="vs-input-group">
+                  <label for="crop-left">左</label>
+                  <input type="number" id="crop-left" class="vs-input" min="0" max="99" value="0" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="crop-top">上</label>
+                  <input type="number" id="crop-top" class="vs-input" min="0" max="99" value="0" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="crop-width">宽</label>
+                  <input type="number" id="crop-width" class="vs-input" min="1" max="100" value="100" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="crop-height">高</label>
+                  <input type="number" id="crop-height" class="vs-input" min="1" max="100" value="100" />
+                </div>
+              </div>
+              <div class="vs-input-row" style="margin-top: 0.5rem;">
+                <div class="vs-input-group">
+                  <label for="grid-step-input">网格步长 (px)</label>
+                  <input type="number" id="grid-step-input" class="vs-input" min="1" max="256" value="16" />
+                </div>
+              </div>
+              <p class="tool-hint">在视频预览上拖拽框选裁剪区域，或使用数值微调。选区内显示像素网格与棋盘格辅助对齐。</p>
+              <p class="vs-crop-preview-label">裁剪网格预览</p>
+              <div class="vs-crop-preview-wrap">
+                <canvas id="crop-preview-canvas" hidden></canvas>
+                <span id="crop-preview-placeholder" class="vs-placeholder">上传视频后显示裁剪预览</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="vs-panel">
+            <span class="vs-panel-title">2 · 片段与提帧</span>
+            <div class="tool-section">
+              <div class="vs-input-row">
+                <div class="vs-input-group">
+                  <label for="segment-start">起始 (秒)</label>
+                  <input type="number" id="segment-start" class="vs-input" min="0" step="0.1" value="0" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="segment-end">结束 (秒)</label>
+                  <input type="number" id="segment-end" class="vs-input" min="0" step="0.1" value="0" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="fps-input">每秒帧数</label>
+                  <input type="number" id="fps-input" class="vs-input" min="1" max="60" value="10" />
+                </div>
+              </div>
+              <p id="frame-count-hint" class="tool-hint">预计提取 0 帧</p>
+            </div>
+            <div class="tool-actions">
+              <button type="button" class="pixel-button" id="extract-btn" disabled>提取序列帧</button>
+            </div>
+            <p id="extract-progress" class="vs-progress" hidden></p>
+          </div>
+        </div>
+
+        <div class="vs-workspace">
+          <div class="vs-panel">
+            <span class="vs-panel-title">3 · 背景抠图（可选）</span>
+            <label>
+              <input type="checkbox" id="chroma-toggle" />
+              启用 ChromaKey 抠图
+            </label>
+            <div id="chroma-panel" hidden>
+              <p class="tool-hint">点击下方参考帧拾取背景色（绿幕 / 蓝幕 / 纯色背景效果最佳）。</p>
+              <canvas id="ref-canvas"></canvas>
+              <div class="vs-input-row" style="margin-top: 0.5rem;">
+                <div class="vs-input-group">
+                  <label for="tolerance-input">容差</label>
+                  <input type="number" id="tolerance-input" class="vs-input" min="0" max="255" value="30" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="softness-input">羽化</label>
+                  <input type="number" id="softness-input" class="vs-input" min="0" max="255" value="15" />
+                </div>
+                <div class="vs-input-group">
+                  <label for="despill-input">去溢色</label>
+                  <input type="number" id="despill-input" class="vs-input" min="0" max="100" value="50" />
+                </div>
+                <div class="vs-input-group">
+                  <label>采样色</label>
+                  <span id="sample-color-display" class="vs-color-sample">未采样</span>
+                </div>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="pixel-button" id="apply-chroma-btn" disabled>应用抠图</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="vs-panel">
+            <span class="vs-panel-title">4 · 预览</span>
+            <div class="vs-preview">
+              <img id="sheet-preview" alt="序列图预览" hidden />
+              <p id="sheet-placeholder" class="vs-placeholder">提取帧后将在此显示序列图预览</p>
+            </div>
+            <p class="tool-hint" style="margin-top: 0.5rem;">动画预览</p>
+            <canvas id="anim-canvas"></canvas>
+            <div class="tool-actions">
+              <button type="button" class="pixel-button" id="anim-play-btn">播放</button>
+              <button type="button" class="pixel-button" id="anim-stop-btn">停止</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-section" style="margin-top: 1rem;">
+          <span class="vs-panel-title">5 · 导出</span>
+          <div class="vs-input-row">
+            <div class="vs-input-group">
+              <label for="columns-input">列数</label>
+              <input type="number" id="columns-input" class="vs-input" min="1" max="64" value="4" />
+            </div>
+            <div class="vs-input-group">
+              <label for="gap-input">间距 (px)</label>
+              <input type="number" id="gap-input" class="vs-input" min="0" max="64" value="0" />
+            </div>
+            <div class="vs-input-group">
+              <label for="frame-size-select">单帧尺寸</label>
+              <select id="frame-size-select" class="vs-select">
+                <option value="">原始比例</option>
+                <option value="32">32×32</option>
+                <option value="64">64×64</option>
+                <option value="128">128×128</option>
+                <option value="256">256×256</option>
+              </select>
+            </div>
+            <div class="vs-input-group">
+              <label for="sheet-bg-input">背景色</label>
+              <input type="color" id="sheet-bg-input" value="#ffffff" />
+            </div>
+          </div>
+          <div class="tool-actions">
+            <button type="button" class="pixel-button" id="export-sheet-btn" disabled>导出序列图 PNG</button>
+            <button type="button" class="pixel-button" id="export-gif-btn" disabled>导出 GIF</button>
+            <button type="button" class="pixel-button" id="export-zip-btn" disabled>导出透明帧 ZIP</button>
+            <button type="button" class="pixel-button" id="export-spine-btn" disabled>导出 Spine ZIP</button>
+          </div>
+          <p class="tool-hint">精灵图默认 0 间距，避免切片后位置漂移。透明 ZIP 需先完成抠图。Spine 包含 skeleton JSON + images/*.png。</p>
+        </div>
+
+        <p id="status-msg" class="vs-status"></p>
+
+        <p class="vs-credit">
+          核心算法移植自 GPL-3.0 开源项目
+          <a href="https://github.com/mowangblog/video-timesheet-web" target="_blank" rel="noopener">mowangblog/video-timesheet-web</a>，
+          在线 Demo：<a href="https://mowangblog.github.io/video-timesheet-web/" target="_blank" rel="noopener">video-timesheet-web</a>。
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script src="../assets/video-sprite-core.js"></script>
+  <script src="../assets/video-sprite-export.js"></script>
+  <script src="../assets/video-sprite-tool.js"></script>
+</body>
+</html>
