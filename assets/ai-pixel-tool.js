@@ -9,6 +9,7 @@
     result: null, // { rgb, alpha, wLogic, hLogic }
     offCanvas: null,
     params: JSON.parse(JSON.stringify(CFG.DEFAULTS)),
+    keepOriginalSize: false,
     busy: false
   };
 
@@ -23,6 +24,7 @@
 
   var LEVEL_ORDER = ["simple", "normal", "expert"];
   var currentLevel = "simple";
+  var hintSync = null; // 保持原图尺寸勾选框与 W/H 输入框的同步函数（渲染后指向当前 hint 字段）
 
   function isVisible(paramLevel) { return LEVEL_ORDER.indexOf(paramLevel) <= LEVEL_ORDER.indexOf(currentLevel); }
 
@@ -90,8 +92,48 @@
         refresh();
       }
       wIn.addEventListener("input", readHint); hIn.addEventListener("input", readHint);
+
+      // 保持原图尺寸：勾选后以原图宽×高作为块尺寸提示（userHint），W/H 输入框禁用
+      var keepLb = document.createElement("label");
+      keepLb.className = "ap-keep-size";
+      keepLb.title = "勾选后，输出的逻辑分辨率将等于原图尺寸（宽×高）。";
+      var keepCb = document.createElement("input");
+      keepCb.type = "checkbox";
+      keepCb.checked = !!state.keepOriginalSize;
+      var keepTxt = document.createElement("span");
+      keepTxt.textContent = "保持原图尺寸";
+      keepLb.appendChild(keepCb);
+      keepLb.appendChild(keepTxt);
+
+      function syncKeepSize() {
+        var img = state.image;
+        if (state.keepOriginalSize) {
+          wIn.disabled = true; hIn.disabled = true;
+          if (img) {
+            wIn.value = img.width; hIn.value = img.height;
+            state.params[key] = { w: img.width, h: img.height };
+          } else {
+            wIn.value = ""; hIn.value = "";
+            state.params[key] = null;
+          }
+        } else {
+          wIn.disabled = false; hIn.disabled = false;
+          var wv = parseInt(wIn.value, 10), hv = parseInt(hIn.value, 10);
+          state.params[key] = (wv > 0 && hv > 0) ? { w: wv, h: hv } : null;
+        }
+      }
+
+      keepCb.addEventListener("change", function () {
+        state.keepOriginalSize = keepCb.checked;
+        syncKeepSize();
+        refresh();
+      });
+      hintSync = syncKeepSize;
+      if (state.keepOriginalSize) syncKeepSize();
+
       row.appendChild(wIn); row.appendChild(x); row.appendChild(hIn);
       wrap.appendChild(row);
+      wrap.appendChild(keepLb);
     } else if (m.type === "range") {
       var row = document.createElement("div");
       row.className = "ap-range-row";
@@ -130,6 +172,7 @@
       state.image = { imageData: imageData, width: w, height: h, url: url };
       el.preview.src = url; el.preview.hidden = false; el.placeholder.hidden = true;
       el.meta.textContent = file.name + " · " + w + "×" + h; el.meta.hidden = false;
+      if (hintSync) hintSync();
       showError("");
       el["process-btn"].disabled = false;
       el.status.textContent = "";
