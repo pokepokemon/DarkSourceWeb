@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>伪像素规整 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main { max-width: var(--max-width); width: 100%; margin: 1.5rem auto 2rem; padding: 0 1rem; }
+
+    .ap-panel {
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .ap-panel-title {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .ap-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .ap-preview:hover, .ap-preview.ap-drag-over { border-color: var(--accent-cyan); background: rgba(110, 197, 255, 0.08); }
+    .ap-preview img { max-width: 100%; max-height: 300px; display: block; }
+    .ap-placeholder { color: var(--text-sub); font-size: 0.85rem; text-align: center; padding: 1rem; line-height: 1.6; }
+    .ap-meta { font-size: 0.78rem; color: var(--accent-cyan); margin-top: 0.5rem; font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all; }
+
+    .ap-levels { display: flex; gap: 1rem; margin-bottom: 0.6rem; }
+    .ap-levels label { font-size: 0.8rem; color: var(--text-sub); cursor: pointer; display: flex; align-items: center; gap: 0.25rem; }
+    .ap-levels input { accent-color: var(--accent-cyan); }
+
+    .ap-params { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.75rem 1rem; }
+    .ap-field label { display: block; font-size: 0.75rem; color: var(--text-sub); margin-bottom: 0.25rem; }
+    .ap-range-row { display: flex; align-items: center; gap: 0.5rem; }
+    .ap-range-row input[type="range"] { flex: 1; accent-color: var(--accent-cyan); }
+    .ap-input, .ap-select {
+      padding: 0.4rem 0.55rem; font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4); border: 3px solid #000; color: var(--text-main);
+      min-width: 4.5rem; width: 100%; box-sizing: border-box;
+    }
+    .ap-number { width: 4.5rem; min-width: 4.5rem; }
+    .ap-checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding-top: 1.3rem; }
+    .ap-checkbox-row input { accent-color: var(--accent-cyan); width: 1rem; height: 1rem; }
+    .ap-checkbox-row label { font-size: 0.8rem; color: var(--text-main); margin: 0; }
+    .ap-hint-row { display: flex; align-items: center; gap: 0.4rem; }
+    .ap-hint-row .ap-input { width: 5rem; min-width: 5rem; }
+
+    .ap-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.75rem; }
+    .ap-actions label { font-size: 0.8rem; color: var(--text-sub); }
+    .ap-actions .ap-select { width: auto; min-width: 110px; }
+    #status { font-size: 0.8rem; color: var(--accent-cyan); }
+    .ap-error { color: var(--accent-pink); font-size: 0.85rem; margin-top: 0.5rem; line-height: 1.5; }
+    .ap-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 0.4rem; line-height: 1.5; }
+
+    .ap-tip-mark {
+      display: inline-block;
+      width: 15px; height: 15px;
+      line-height: 15px;
+      text-align: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--accent-cyan);
+      font-size: 0.68rem;
+      font-weight: bold;
+      cursor: help;
+      position: relative;
+      margin-left: 0.35rem;
+      vertical-align: middle;
+    }
+    .ap-tip-mark::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      bottom: 150%;
+      transform: translateX(-50%);
+      background: #000;
+      border: 2px solid var(--accent-cyan);
+      color: var(--text-main);
+      padding: 0.5rem 0.65rem;
+      font-size: 0.72rem;
+      line-height: 1.55;
+      width: 230px;
+      text-align: left;
+      white-space: normal;
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.12s ease;
+    }
+    .ap-tip-mark:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .ap-result-wrap {
+      margin-top: 0.6rem; background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      min-height: 180px; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: auto;
+    }
+    #result-canvas { max-width: 100%; display: block; image-rendering: pixelated; }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap"><div id="nav-placeholder"></div></header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">伪像素规整</h1>
+        <p class="section-sub">
+          将 AI 扩散模型生成的「伪像素图」自动转换为规范像素图：去噪、网格检测、块提取与调色板精炼一步完成，
+          支持透明通道与半透明像素处理。全部处理在本地完成，图片不会上传至服务器。
+        </p>
+
+        <div class="ap-panel">
+          <span class="ap-panel-title">输入图片</span>
+          <div id="drop-zone" class="ap-preview">
+            <img id="preview" alt="输入预览" hidden />
+            <p id="placeholder" class="ap-placeholder">点击或拖拽上传伪像素图（支持透明 PNG）</p>
+          </div>
+          <input type="file" id="file-input" accept="image/*" hidden />
+          <p id="meta" class="ap-meta" hidden></p>
+        </div>
+
+        <div class="ap-panel">
+          <span class="ap-panel-title">参数</span>
+          <div class="ap-levels">
+            <label><input type="radio" name="level" value="simple" checked /> 简易</label>
+            <label><input type="radio" name="level" value="normal" /> 一般</label>
+            <label><input type="radio" name="level" value="expert" /> 专家</label>
+          </div>
+          <div id="params" class="ap-params"></div>
+          <div class="ap-actions">
+            <button type="button" class="pixel-button" id="process-btn" disabled>转换</button>
+            <span id="status"></span>
+          </div>
+          <p id="error" class="ap-error" hidden></p>
+          <p class="ap-hint">
+            首次转换后，调整任意参数都会实时重算。简易档仅暴露核心参数，一般/专家档逐步放开降噪、放大与网格检测的更多项。
+          </p>
+        </div>
+
+        <div class="ap-panel">
+          <span class="ap-panel-title">结果</span>
+          <div class="ap-actions">
+            <label for="bg-select">预览背景</label>
+            <select id="bg-select" class="ap-select">
+              <option value="checker" selected>棋盘格</option>
+              <option value="#000000">黑</option>
+              <option value="#ffffff">白</option>
+              <option value="#00ff00">绿</option>
+              <option value="#ffff00">黄</option>
+              <option value="#ff0000">红</option>
+              <option value="#0000ff">蓝</option>
+            </select>
+            <button type="button" class="pixel-button" id="download-btn" disabled>下载 PNG</button>
+          </div>
+          <div class="ap-result-wrap">
+            <canvas id="result-canvas"></canvas>
+            <p id="result-placeholder" class="ap-placeholder">转换后在此预览结果</p>
+          </div>
+          <p id="result-meta" class="ap-meta" hidden></p>
+        </div>
+      </section>
+    </main>
+
+    <footer><div id="footer-placeholder"></div></footer>
+  </div>
+
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script src="../assets/ai-pixel-config.js"></script>
+  <script src="../assets/ai-pixel-tool.js"></script>
+</body>
+</html>

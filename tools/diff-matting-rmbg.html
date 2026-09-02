@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>差分去底 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .dm-panel {
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dm-panel-title {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .dm-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .dm-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .dm-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .dm-preview:hover,
+    .dm-preview.dm-drag-over {
+      border-color: var(--accent-cyan);
+      background: rgba(110, 197, 255, 0.08);
+    }
+
+    .dm-preview img {
+      max-width: 100%;
+      max-height: 300px;
+      display: block;
+    }
+
+    .dm-placeholder {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    .dm-meta {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      margin-top: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      word-break: break-all;
+    }
+
+    .dm-params {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem 1rem;
+    }
+
+    .dm-field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-bottom: 0.25rem;
+    }
+
+    .dm-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dm-slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent-cyan);
+    }
+
+    .dm-input,
+    .dm-select {
+      padding: 0.4rem 0.55rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+      min-width: 4.5rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .dm-number {
+      width: 4.5rem;
+      min-width: 4.5rem;
+    }
+
+    .dm-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .dm-actions label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+
+    .dm-actions .dm-select {
+      width: auto;
+      min-width: 110px;
+    }
+
+    .dm-result-wrap {
+      margin-top: 0.6rem;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: auto;
+    }
+
+    #result-canvas {
+      max-width: 100%;
+      display: block;
+    }
+
+    .dm-error {
+      color: var(--accent-pink);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .dm-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">差分去底</h1>
+        <p class="section-sub">
+          输入同一画面的「纯白底图」与「纯黑底图」（像素级对齐），用差分抠图法合成带透明通道的前景图。
+          适用于同一场景只改背景色渲染两次得到的素材，可还原半透明、发光与抗锯齿边缘。
+          全部处理在本地完成，图片不会上传至服务器。
+        </p>
+
+        <div class="dm-workspace">
+          <div class="dm-panel">
+            <span class="dm-panel-title">白底图</span>
+            <div id="white-drop-zone" class="dm-preview">
+              <img id="white-preview" alt="白底图预览" hidden />
+              <p id="white-placeholder" class="dm-placeholder">点击或拖拽上传纯白底图</p>
+            </div>
+            <input type="file" id="white-input" accept="image/*" hidden />
+            <p id="white-meta" class="dm-meta" hidden></p>
+          </div>
+
+          <div class="dm-panel">
+            <span class="dm-panel-title">黑底图</span>
+            <div id="black-drop-zone" class="dm-preview">
+              <img id="black-preview" alt="黑底图预览" hidden />
+              <p id="black-placeholder" class="dm-placeholder">点击或拖拽上传纯黑底图</p>
+            </div>
+            <input type="file" id="black-input" accept="image/*" hidden />
+            <p id="black-meta" class="dm-meta" hidden></p>
+          </div>
+        </div>
+
+        <div class="dm-panel">
+          <span class="dm-panel-title">参数</span>
+          <div class="dm-params">
+            <div class="dm-field">
+              <label for="white-level">白底亮度（背景容差）</label>
+              <div class="dm-slider-row">
+                <input type="range" id="white-level" min="0" max="255" value="217" step="1" />
+                <input type="number" id="white-level-input" class="dm-input dm-number" min="0" max="255" value="217" step="1" />
+              </div>
+            </div>
+            <div class="dm-field">
+              <label for="black-level">黑底亮度（背景容差）</label>
+              <div class="dm-slider-row">
+                <input type="range" id="black-level" min="0" max="255" value="25" step="1" />
+                <input type="number" id="black-level-input" class="dm-input dm-number" min="0" max="255" value="25" step="1" />
+              </div>
+            </div>
+            <div class="dm-field">
+              <label for="combine-select">α 合成方式</label>
+              <select id="combine-select" class="dm-select">
+                <option value="max" selected>max 通道</option>
+                <option value="mean">三通道平均</option>
+                <option value="luma">亮度加权</option>
+              </select>
+            </div>
+            <div class="dm-field">
+              <label for="threshold-input">噪声阈值（α 低于此值归零）</label>
+              <input type="number" id="threshold-input" class="dm-input" min="0" max="255" value="3" step="1" />
+            </div>
+            <div class="dm-field">
+              <label for="feather-input">羽化（边缘平滑）</label>
+              <input type="number" id="feather-input" class="dm-input" min="0" max="16" value="0" step="1" />
+            </div>
+            <div class="dm-field">
+              <label for="floor-input">反预乘下限（防噪声放大）</label>
+              <input type="number" id="floor-input" class="dm-input" min="0" max="16" value="4" step="1" />
+            </div>
+            <div class="dm-field">
+              <label for="color-source">前景色来源（0 黑底 · 100 白底）</label>
+              <div class="dm-slider-row">
+                <input type="range" id="color-source" min="0" max="100" value="0" step="1" />
+                <input type="number" id="color-source-input" class="dm-input dm-number" min="0" max="100" value="0" step="1" />
+              </div>
+            </div>
+          </div>
+          <div class="dm-actions" style="margin-top: 0.75rem;">
+            <button type="button" class="pixel-button" id="process-btn" disabled>生成去底图</button>
+            <p id="dm-error" class="dm-error" hidden></p>
+          </div>
+          <p class="dm-hint">
+            黑白底参考亮度用于适配非纯白 / 非纯黑的底（如白底实际 245、黑底实际 10）。
+            前景色来源用于当主体在两图中色彩不完全一致时，选择以黑底还是白底还原颜色（0=纯黑底，100=纯白底，50=平均）。
+            生成一次后，调整任何参数都会实时重算预览。
+          </p>
+        </div>
+
+        <div class="dm-panel">
+          <span class="dm-panel-title">结果</span>
+          <div class="dm-actions">
+            <label for="bg-select">预览背景</label>
+            <select id="bg-select" class="dm-select">
+              <option value="checker" selected>棋盘格</option>
+              <option value="#000000">黑</option>
+              <option value="#ffffff">白</option>
+              <option value="#00ff00">绿</option>
+              <option value="#ffff00">黄</option>
+              <option value="#ff0000">红</option>
+              <option value="#0000ff">蓝</option>
+            </select>
+            <button type="button" class="pixel-button" id="download-btn" disabled>下载 PNG</button>
+          </div>
+          <div class="dm-result-wrap">
+            <canvas id="result-canvas"></canvas>
+            <p id="result-placeholder" class="dm-placeholder">生成后在此预览透明结果</p>
+          </div>
+          <p id="result-meta" class="dm-meta" hidden></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script src="../assets/diff-matting-core.js"></script>
+  <script src="../assets/diff-matting-tool.js"></script>
+</body>
+</html>
