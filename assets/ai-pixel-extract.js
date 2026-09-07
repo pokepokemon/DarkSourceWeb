@@ -86,7 +86,7 @@
     var outAlpha = new Float32Array(hLogic * wLogic);
     var prevByEnd = new Int32Array(wLogic);
     for (var j = 0; j < hLogic; j++) {
-      var lastRep = null, prevBxEnd = 0;
+      var prevBxEnd = 0;
       for (var i = 0; i < wLogic; i++) {
         var byStart, byEnd, bxStart, bxEnd;
         if (useCells) {
@@ -109,9 +109,9 @@
         var oi = (j * wLogic + i) * 3;
         if (byEnd <= byStart) { if (j > 0) { var pi2 = ((j - 1) * wLogic + i) * 3; outRgb[oi] = outRgb[pi2]; outRgb[oi + 1] = outRgb[pi2 + 1]; outRgb[oi + 2] = outRgb[pi2 + 2]; outAlpha[j * wLogic + i] = outAlpha[(j - 1) * wLogic + i]; } continue; }
         if (bxEnd <= bxStart) {
-          if (lastRep) { outRgb[oi] = lastRep[0]; outRgb[oi + 1] = lastRep[1]; outRgb[oi + 2] = lastRep[2]; }
-          else if (j > 0) { var pi3 = ((j - 1) * wLogic + i) * 3; outRgb[oi] = outRgb[pi3]; outRgb[oi + 1] = outRgb[pi3 + 1]; outRgb[oi + 2] = outRgb[pi3 + 2]; }
-          outAlpha[j * wLogic + i] = j > 0 ? outAlpha[(j - 1) * wLogic + i] : 0;
+          // 0 宽块（起点已到/超出图像右边界）：整块继承左邻块的 rgb+alpha，避免首行 alpha 被置 0 形成透明列
+          if (i > 0) { var li = (j * wLogic + (i - 1)) * 3; outRgb[oi] = outRgb[li]; outRgb[oi + 1] = outRgb[li + 1]; outRgb[oi + 2] = outRgb[li + 2]; outAlpha[j * wLogic + i] = outAlpha[j * wLogic + (i - 1)]; }
+          else if (j > 0) { var pi3 = ((j - 1) * wLogic + i) * 3; outRgb[oi] = outRgb[pi3]; outRgb[oi + 1] = outRgb[pi3 + 1]; outRgb[oi + 2] = outRgb[pi3 + 2]; outAlpha[j * wLogic + i] = outAlpha[(j - 1) * wLogic + i]; }
           continue;
         }
         var blockH = byEnd - byStart, blockW = bxEnd - bxStart;
@@ -133,7 +133,6 @@
         else if (ratio >= 1) a = 255;
         else a = alphaMode === "delete" ? 0 : (alphaMode === "fill" ? 255 : Math.round(ratio * 255));
         outAlpha[j * wLogic + i] = a;
-        lastRep = rep;
       }
     }
     return { rgb: outRgb, alpha: outAlpha };

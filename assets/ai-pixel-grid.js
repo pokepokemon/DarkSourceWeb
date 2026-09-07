@@ -206,8 +206,9 @@
     var phaseX = ph.phaseX, phaseY = ph.phaseY, conf = Math.min(1, Math.max(ph.conf, voteConf));
 
     function countBlocks(length, period, phase) {
-      var n = Math.round((length - phase) / period);
-      if (n > 1 && phase + n * period > length + 0.02 * period) n -= 1;
+      // 块 k 起点 = phase + k*period，起点落在 [0, length) 内的块数
+      // = 满足 phase + k*period < length 的最小整数 k 个数 = ceil((length - phase)/period)
+      var n = Math.ceil((length - phase) / period);
       return n;
     }
     var wLogicPhase = Math.min(Math.max(1, countBlocks(w, px, phaseX)), w);
