@@ -22,6 +22,7 @@
     if (pathname.indexOf("video-to-sprite") !== -1) return "tools-video-sprite";
     if (pathname.indexOf("diff-matting-rmbg") !== -1) return "tools-diffmatting";
     if (pathname.indexOf("ai-pixel-convert") !== -1) return "tools-aipixel";
+    if (pathname.indexOf("color-remap") !== -1) return "tools-colorremap";
     if (pathname.indexOf("tab-to-devlog") !== -1) return "tools-tab";
     if (pathname.indexOf("devlog") !== -1) return "devlog";
     if (pathname.indexOf("privacy") !== -1) return "privacy";
@@ -57,7 +58,7 @@
     var toolsLabel = container.querySelector(".nav-group-label[data-view='tools']");
     if (infoLabel && ["devlog", "game-intro", "privacy"].indexOf(currentId) !== -1) infoLabel.classList.add("active");
     else if (infoLabel) infoLabel.classList.remove("active");
-    if (toolsLabel && (currentId === "tools-tab" || currentId === "tools-json" || currentId === "tools-pixel" || currentId === "tools-video-sprite" || currentId === "tools-diffmatting" || currentId === "tools-aipixel")) toolsLabel.classList.add("active");
+    if (toolsLabel && (currentId === "tools-tab" || currentId === "tools-json" || currentId === "tools-pixel" || currentId === "tools-video-sprite" || currentId === "tools-diffmatting" || currentId === "tools-aipixel" || currentId === "tools-colorremap")) toolsLabel.classList.add("active");
     else if (toolsLabel) toolsLabel.classList.remove("active");
   }
 

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>区域换色 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .cr-panel {
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .cr-panel-title {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .cr-subtitle {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    /* 图片输入区：内嵌滚动视口 */
+    .cr-stage-wrap {
+      position: relative;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      min-height: 220px;
+      max-height: 70vh;
+      display: block;
+      overflow: auto;
+      cursor: default;
+    }
+
+    #stage-canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: none;
+      cursor: crosshair;
+      touch-action: none;
+      background: rgba(10, 14, 30, 0.9);
+    }
+
+    .cr-stage-wrap.has-image {
+      border-style: solid;
+      border-color: #000;
+    }
+
+    .cr-stage-wrap.drag-over {
+      border-color: var(--accent-cyan);
+      background: rgba(110, 197, 255, 0.08);
+    }
+
+    .cr-zoom-label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      color: var(--accent-yellow);
+      min-width: 3.2rem;
+      text-align: center;
+    }
+
+    .cr-mode-btn.active {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    #stage-placeholder {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 1.5rem;
+      line-height: 1.7;
+    }
+
+    .cr-meta {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      margin-top: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      word-break: break-all;
+    }
+
+    .cr-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .cr-actions label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+
+    .cr-input,
+    .cr-select {
+      padding: 0.4rem 0.55rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+      min-width: 4.5rem;
+      box-sizing: border-box;
+    }
+
+    .cr-number {
+      width: 4.2rem;
+      min-width: 4.2rem;
+    }
+
+    .cr-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cr-slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent-cyan);
+    }
+
+    /* 工具区（调色板 + 取色卡 + remap）内部三栏 */
+    .cr-tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .cr-tool-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 调色板 */
+    .cr-palette {
+      max-height: 340px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+      gap: 4px;
+      padding: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 2px solid #000;
+    }
+
+    .cr-swatch {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .cr-swatch.selected {
+      outline: 3px solid var(--accent-yellow);
+      outline-offset: -1px;
+      z-index: 1;
+    }
+
+    .cr-swatch .cr-count {
+      position: absolute;
+      right: 1px;
+      bottom: 1px;
+      font-size: 0.55rem;
+      line-height: 1;
+      color: #fff;
+      text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
+      pointer-events: none;
+    }
+
+    /* 取色板 */
+    .cr-picker-box {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+      align-items: stretch;
+    }
+
+    .cr-picker-sv {
+      position: relative;
+      flex: 1;
+      min-height: 140px;
+      background: #ff0000;
+      border: 3px solid #000;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .cr-picker-cursor {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px #000;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      left: 0;
+      top: 0;
+    }
+
+    .cr-picker-side {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 120px;
+      flex: 0 0 120px;
+    }
+
+    .cr-picker-hue {
+      position: relative;
+      height: 18px;
+      border: 3px solid #000;
+      cursor: pointer;
+      touch-action: none;
+      background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+    }
+
+    .cr-picker-hue-cursor {
+      position: absolute;
+      top: -3px;
+      width: 4px;
+      height: 100%;
+      background: #fff;
+      border: 2px solid #000;
+      pointer-events: none;
+      transform: translateX(-50%);
+      left: 0;
+    }
+
+    .cr-picker-alpha {
+      position: relative;
+      height: 18px;
+      border: 3px solid #000;
+      cursor: pointer;
+      touch-action: none;
+      background-image:
+        linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+        linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+      background-size: 10px 10px;
+      background-position: 0 0, 5px 5px;
+      background-color: #fff;
+    }
+
+    .cr-picker-alpha-cursor {
+      position: absolute;
+      top: -3px;
+      width: 4px;
+      height: 100%;
+      background: #fff;
+      border: 2px solid #000;
+      pointer-events: none;
+      transform: translateX(-50%);
+      left: 0;
+    }
+
+    .cr-picker-preview {
+      height: 40px;
+      border: 3px solid #000;
+      background-image:
+        linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+        linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+      background-size: 10px 10px;
+      background-position: 0 0, 5px 5px;
+      background-color: #fff;
+    }
+
+    .cr-status {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      margin-left: auto;
+    }
+
+    .cr-status.dirty {
+      color: var(--accent-yellow);
+    }
+
+    /* 颜色信息 / 取色卡 */
+    .cr-color-info {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid #000;
+      padding: 0.5rem;
+      margin-top: 0.6rem;
+      line-height: 1.7;
+    }
+
+    .cr-color-info .cr-label {
+      color: var(--accent-cyan);
+    }
+
+    .cr-field {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .cr-field label {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      min-width: 1.2rem;
+    }
+
+    /* remap 列表 */
+    .cr-remap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .cr-remap-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid #000;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.78rem;
+    }
+
+    .cr-remap-item .cr-swatch-mini {
+      width: 26px;
+      height: 26px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      flex: 0 0 auto;
+    }
+
+    .cr-remap-item .cr-arrow {
+      color: var(--accent-yellow);
+      font-weight: bold;
+    }
+
+    .cr-remap-item .cr-remap-text {
+      flex: 1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .cr-remap-del {
+      background: transparent;
+      border: 2px solid #000;
+      color: var(--accent-pink);
+      cursor: pointer;
+      font-size: 0.8rem;
+      width: 24px;
+      height: 24px;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .cr-remap-del:hover {
+      background: var(--accent-pink);
+      color: #000;
+    }
+
+    .cr-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    .cr-error {
+      color: var(--accent-pink);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      line-height: 1.5;
+    }
+
+    /* 结果预览 */
+    .cr-result-wrap {
+      margin-top: 0.6rem;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+
+    #result-canvas {
+      max-width: 100%;
+      display: block;
+    }
+
+    .cr-empty {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      padding: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">区域换色</h1>
+        <p class="section-sub">
+          上传图片后自动提取全部像素颜色（调色板，相同 RGB 但透明度不同会分别列出）。
+          选中一个颜色作为「源色」，用取色卡指定「目标色」，即可创建一组 remap 映射；
+          再用圆形笔刷在图上涂抹出需要替换的区域，只有落在涂抹区域内的源色才会被替换。
+          全部处理在本地完成，图片不会上传至服务器。
+        </p>
+
+        <!-- 图片输入 / 涂抹 -->
+        <div class="cr-panel">
+          <span class="cr-panel-title">图片输入 / 涂抹</span>
+          <div id="stage-wrap" class="cr-stage-wrap">
+            <canvas id="stage-canvas" hidden></canvas>
+            <p id="stage-placeholder" class="cr-placeholder">点击或拖拽上传图片，<br />上传后可用圆形笔刷在此涂抹</p>
+          </div>
+          <input type="file" id="file-input" accept="image/*" hidden />
+          <p id="stage-meta" class="cr-meta" hidden></p>
+
+          <div class="cr-actions" style="margin-top: 0.6rem;">
+            <span class="cr-subtitle" style="margin-bottom:0;">模式</span>
+            <button type="button" class="pixel-button cr-mode-btn active" id="mode-brush-btn" data-mode="brush">笔刷</button>
+            <button type="button" class="pixel-button cr-mode-btn" id="mode-pan-btn" data-mode="pan">拖拽</button>
+          </div>
+
+          <div class="cr-actions" style="margin-top: 0.6rem;">
+            <span class="cr-subtitle" style="margin-bottom:0;">缩放</span>
+            <button type="button" class="pixel-button" id="zoom-out-btn" disabled>−</button>
+            <input type="number" id="zoom-input" class="cr-input cr-number" min="5" max="800" value="100" step="5" />
+            <span class="cr-zoom-label">%</span>
+            <button type="button" class="pixel-button" id="zoom-in-btn" disabled>＋</button>
+            <button type="button" class="pixel-button" id="zoom-fit-btn" disabled>适应</button>
+            <button type="button" class="pixel-button" id="zoom-reset-btn" disabled>100%</button>
+          </div>
+          <p class="cr-hint">用按钮或百分比输入框缩放图片。在「拖拽」模式下可左键拖动图片在画布内平移（不会超出画布边界）。</p>
+
+          <div class="cr-actions" style="margin-top: 0.6rem;">
+            <label for="brush-size">笔刷大小</label>
+            <input type="range" id="brush-size" min="1" max="80" value="12" step="1" />
+            <input type="number" id="brush-size-input" class="cr-input cr-number" min="1" max="200" value="12" step="1" />
+            <label for="mask-color">涂抹颜色</label>
+            <input type="color" id="mask-color" value="#ff0000" />
+            <label for="mask-alpha">不透明度</label>
+            <input type="range" id="mask-alpha" min="0" max="100" value="45" step="1" />
+            <input type="number" id="mask-alpha-input" class="cr-input cr-number" min="0" max="100" value="45" step="1" />
+            <button type="button" class="pixel-button" id="clear-mask-btn" disabled>清除涂抹</button>
+            <button type="button" class="pixel-button cr-mode-btn" id="select-all-btn" disabled>全选区域</button>
+          </div>
+          <p class="cr-hint">
+            涂抹区域以半透明色层显示（可自定义颜色与不透明度）。右键或按住 <code>Alt</code> 涂抹可擦除已有涂抹。
+            只有同时满足「落在涂抹区域内」且「颜色等于某 remap 的源色」的像素才会被替换。
+          </p>
+        </div>
+
+        <!-- 工具区：调色板 | 取色卡 | remap -->
+        <div class="cr-panel">
+          <span class="cr-panel-title">调色板 / 取色卡 / Remap</span>
+          <div class="cr-tool-grid">
+            <!-- 调色板 -->
+            <div>
+              <span class="cr-subtitle">调色板（按像素数量降序）</span>
+              <div id="palette" class="cr-palette"></div>
+              <p id="palette-hint" class="cr-hint">上传图片后在此列出全部颜色，点击选中作为源色。</p>
+            </div>
+
+            <!-- 取色卡 -->
+            <div>
+              <span class="cr-subtitle">颜色值 / 取色卡</span>
+              <div class="cr-actions">
+                <label for="mode-select">显示模式</label>
+                <select id="mode-select" class="cr-select">
+                  <option value="rgba" selected>RGBA</option>
+                  <option value="hsva">HSVA</option>
+                </select>
+                <label for="mode-swap">取色卡同步选中色</label>
+                <input type="checkbox" id="mode-swap" checked />
+              </div>
+
+              <div class="cr-picker-box">
+                <div id="picker-sv" class="cr-picker-sv">
+                  <div id="picker-sv-cursor" class="cr-picker-cursor"></div>
+                </div>
+                <div class="cr-picker-side">
+                  <div id="picker-hue" class="cr-picker-hue">
+                    <div id="picker-hue-cursor" class="cr-picker-hue-cursor"></div>
+                  </div>
+                  <div id="picker-alpha" class="cr-picker-alpha">
+                    <div id="picker-alpha-cursor" class="cr-picker-alpha-cursor"></div>
+                  </div>
+                  <div id="picker-preview" class="cr-picker-preview"></div>
+                </div>
+              </div>
+
+              <div id="color-info" class="cr-color-info"></div>
+            </div>
+          </div>
+
+          <!-- Remap 列表（横跨两栏） -->
+          <div style="margin-top: 0.75rem;">
+            <span class="cr-subtitle">Remap 列表</span>
+            <div class="cr-actions">
+              <button type="button" class="pixel-button" id="add-remap-btn" disabled>创建 Remap</button>
+              <button type="button" class="pixel-button" id="clear-remap-btn" disabled>清空全部</button>
+            </div>
+            <div id="remap-list" class="cr-remap-list"></div>
+            <p id="remap-hint" class="cr-hint">选中调色板颜色（源色）并在取色卡填入目标色后，点击「创建 Remap」。</p>
+          </div>
+        </div>
+
+        <!-- 结果预览 -->
+        <div class="cr-panel">
+          <span class="cr-panel-title">结果预览</span>
+          <div class="cr-actions">
+            <button type="button" class="pixel-button" id="process-btn" disabled>处理</button>
+            <label for="bg-select">预览背景</label>
+            <select id="bg-select" class="cr-select">
+              <option value="checker" selected>棋盘格</option>
+              <option value="#000000">黑</option>
+              <option value="#ffffff">白</option>
+              <option value="#00ff00">绿</option>
+              <option value="#ffff00">黄</option>
+              <option value="#ff0000">红</option>
+              <option value="#0000ff">蓝</option>
+            </select>
+            <button type="button" class="pixel-button" id="download-btn" disabled>下载 PNG</button>
+            <span id="result-status" class="cr-status"></span>
+          </div>
+          <div class="cr-result-wrap">
+            <canvas id="result-canvas"></canvas>
+            <p id="result-placeholder" class="cr-empty">上传、涂抹并创建 Remap 后，点击「处理」显示替换结果</p>
+          </div>
+          <p id="result-meta" class="cr-meta" hidden></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script src="../assets/color-remap-core.js"></script>
+  <script src="../assets/color-remap-tool.js"></script>
+</body>
+</html>
