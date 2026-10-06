@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>翻转旋转 · DarkSource 工具</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    main {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+    }
+
+    .fr-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .fr-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fr-panel {
+      background: rgba(0, 0, 0, 0.35);
+      border: 4px solid #000;
+      padding: 0.75rem;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fr-panel-title {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.35rem;
+    }
+
+    .fr-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+      padding: 0.5rem;
+    }
+
+    .fr-preview img {
+      max-width: 100%;
+      max-height: 320px;
+      image-rendering: pixelated;
+    }
+
+    .fr-checker {
+      background:
+        conic-gradient(#2a2a2a 0 25%, #3a3a3a 0 50%, #2a2a2a 0 75%, #3a3a3a 0)
+        0 0 / 20px 20px;
+    }
+
+    .fr-placeholder {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+
+    .fr-drop-zone {
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .fr-drop-zone:hover,
+    .fr-drop-zone.fr-drag-over {
+      border-color: var(--accent-cyan);
+      background: rgba(110, 197, 255, 0.08);
+    }
+
+    .fr-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+      align-items: center;
+    }
+
+    .fr-actions .fr-sep {
+      width: 1px;
+      align-self: stretch;
+      background: rgba(255, 255, 255, 0.12);
+      margin: 0 0.25rem;
+    }
+
+    .fr-actions select {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #000;
+      color: var(--text-main);
+    }
+
+    .fr-field-label {
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .fr-meta {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      margin-top: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .fr-hint {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body class="page-loading">
+  <div class="page">
+    <header class="nav-wrap">
+      <div id="nav-placeholder"></div>
+    </header>
+
+    <main>
+      <section class="pixel-card">
+        <h1 class="section-title">翻转旋转 Flip &amp; Rotate</h1>
+        <p class="section-sub">
+          对图片做水平翻转、垂直翻转或 90°/180°/270° 旋转。所有操作均采用像素级坐标重映射（最近邻搬移），
+          不做任何缩放、插值或抗锯齿，像素色彩与透明度（RGBA）严格与原图一致。处理在本地完成，图片不会上传至服务器。
+        </p>
+
+        <div class="fr-workspace">
+          <div class="fr-panel">
+            <span class="fr-panel-title">原图</span>
+            <div id="drop-zone" class="fr-preview fr-checker fr-drop-zone">
+              <img id="original-img" alt="原图预览" hidden />
+              <p id="original-placeholder" class="fr-placeholder">点击或拖拽上传图片</p>
+            </div>
+            <input type="file" id="file-input" accept="image/*" hidden />
+            <div class="fr-actions">
+              <button type="button" class="pixel-button" id="reset-btn" disabled>清除图片</button>
+            </div>
+            <p id="original-meta" class="fr-meta" hidden></p>
+          </div>
+
+          <div class="fr-panel">
+            <span class="fr-panel-title">结果</span>
+            <div class="fr-preview fr-checker">
+              <img id="result-img" alt="处理结果" hidden />
+              <p id="result-placeholder" class="fr-placeholder">选择操作后在此显示结果</p>
+            </div>
+            <div class="fr-actions">
+              <label class="fr-field-label" for="flip-select">翻转</label>
+              <select id="flip-select" disabled>
+                <option value="none">跳过</option>
+                <option value="flip-h">水平翻转</option>
+                <option value="flip-v">垂直翻转</option>
+              </select>
+              <span class="fr-sep"></span>
+              <label class="fr-field-label" for="rotate-select">旋转</label>
+              <select id="rotate-select" disabled>
+                <option value="none">跳过</option>
+                <option value="rot90-cw">旋转 90°（顺时针）</option>
+                <option value="rot90-ccw">旋转 90°（逆时针）</option>
+                <option value="rot180">旋转 180°</option>
+                <option value="rot270-cw">旋转 270°（顺时针）</option>
+                <option value="rot270-ccw">旋转 270°（逆时针）</option>
+              </select>
+            </div>
+            <p id="result-meta" class="fr-meta" hidden></p>
+            <div class="fr-actions">
+              <button type="button" class="pixel-button" id="download-btn" disabled>下载 PNG</button>
+            </div>
+            <p class="fr-hint">先执行「翻转」，再执行「旋转」，可组合成任意变换。选择即自动刷新结果，均基于原图单次输出，像素严格一致。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div id="footer-placeholder"></div>
+    </footer>
+  </div>
+
+  <script src="../assets/config.js"></script>
+  <script src="../assets/include.js"></script>
+  <script>
+    (function () {
+      var fileInput = document.getElementById("file-input");
+      var dropZone = document.getElementById("drop-zone");
+      var originalImg = document.getElementById("original-img");
+      var originalPlaceholder = document.getElementById("original-placeholder");
+      var originalMeta = document.getElementById("original-meta");
+      var resultImg = document.getElementById("result-img");
+      var resultPlaceholder = document.getElementById("result-placeholder");
+      var resultMeta = document.getElementById("result-meta");
+
+      var resetBtn = document.getElementById("reset-btn");
+      var flipSelect = document.getElementById("flip-select");
+      var rotateSelect = document.getElementById("rotate-select");
+      var downloadBtn = document.getElementById("download-btn");
+
+      var sourceCanvas = null; // 原图像素源 canvas
+      var resultCanvas = null; // 结果 canvas
+      var originalFileName = "image";
+
+      function setControlsEnabled(enabled) {
+        flipSelect.disabled = !enabled;
+        rotateSelect.disabled = !enabled;
+      }
+
+      function loadFile(file) {
+        if (!file || !file.type || file.type.indexOf("image/") !== 0) {
+          alert("请选择图片文件。");
+          return;
+        }
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () {
+          URL.revokeObjectURL(url);
+          originalFileName = (file.name || "image").replace(/\.[^.]+$/, "") || "image";
+
+          sourceCanvas = document.createElement("canvas");
+          sourceCanvas.width = img.naturalWidth;
+          sourceCanvas.height = img.naturalHeight;
+          var ctx = sourceCanvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          originalImg.src = sourceCanvas.toDataURL("image/png");
+          originalImg.hidden = false;
+          originalPlaceholder.hidden = true;
+          originalMeta.hidden = false;
+          originalMeta.textContent =
+            "尺寸 " + sourceCanvas.width + " × " + sourceCanvas.height +
+            "（" + (sourceCanvas.width * sourceCanvas.height).toLocaleString() + " 像素）";
+
+          resetBtn.disabled = false;
+          setControlsEnabled(true);
+
+          // 重置操作并刷新结果（默认跳过 -> 无结果）
+          flipSelect.value = "none";
+          rotateSelect.value = "none";
+          buildResult();
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          alert("图片加载失败，请重试。");
+        };
+        img.src = url;
+      }
+
+      function clearResult() {
+        resultCanvas = null;
+        resultImg.removeAttribute("src");
+        resultImg.hidden = true;
+        resultPlaceholder.hidden = false;
+        resultMeta.hidden = true;
+        downloadBtn.disabled = true;
+      }
+
+      function reset() {
+        sourceCanvas = null;
+        originalImg.removeAttribute("src");
+        originalImg.hidden = true;
+        originalPlaceholder.hidden = false;
+        originalMeta.hidden = true;
+        fileInput.value = "";
+        resetBtn.disabled = true;
+        flipSelect.value = "none";
+        rotateSelect.value = "none";
+        setControlsEnabled(false);
+        clearResult();
+      }
+
+      // 像素级坐标重映射：不做任何插值。mapFn 返回原图坐标 [x, y]，目标尺寸由 w/h 指定。
+      function remap(w, h, mapFn) {
+        var srcCtx = sourceCanvas.getContext("2d");
+        var srcData = srcCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+        var dst = document.createElement("canvas");
+        dst.width = w;
+        dst.height = h;
+        var dstCtx = dst.getContext("2d");
+        var dstImage = dstCtx.createImageData(w, h);
+        var sp = srcData.data;
+        var dp = dstImage.data;
+        var sw = sourceCanvas.width;
+        for (var y = 0; y < h; y++) {
+          for (var x = 0; x < w; x++) {
+            var p = mapFn(x, y);
+            var si = (p[1] * sw + p[0]) * 4;
+            var di = (y * w + x) * 4;
+            dp[di] = sp[si];
+            dp[di + 1] = sp[si + 1];
+            dp[di + 2] = sp[si + 2];
+            dp[di + 3] = sp[si + 3];
+          }
+        }
+        dstCtx.putImageData(dstImage, 0, 0);
+        return dst;
+      }
+
+      // 各操作的几何信息：{ w, h, map }，w/h 为结果尺寸，map 返回原图坐标。
+      function flipGeom(kind) {
+        var w = sourceCanvas.width, h = sourceCanvas.height;
+        if (kind === "flip-h") return { w: w, h: h, map: function (x, y) { return [w - 1 - x, y]; } };
+        if (kind === "flip-v") return { w: w, h: h, map: function (x, y) { return [x, h - 1 - y]; } };
+        return null;
+      }
+
+      function rotateGeom(kind) {
+        var w = sourceCanvas.width, h = sourceCanvas.height;
+        switch (kind) {
+          case "rot90-cw":   return { w: h, h: w, map: function (x, y) { return [y, h - 1 - x]; } };
+          case "rot90-ccw":  return { w: h, h: w, map: function (x, y) { return [w - 1 - y, x]; } };
+          case "rot180":     return { w: w, h: h, map: function (x, y) { return [w - 1 - x, h - 1 - y]; } };
+          case "rot270-cw":  return { w: h, h: w, map: function (x, y) { return [w - 1 - y, x]; } };
+          case "rot270-ccw": return { w: h, h: w, map: function (x, y) { return [y, h - 1 - x]; } };
+          default:           return null;
+        }
+      }
+
+      function buildResult() {
+        if (!sourceCanvas) return;
+        var flipKind = flipSelect.value;
+        var rotKind = rotateSelect.value;
+        var fg = flipGeom(flipKind);
+        var rg = rotateGeom(rotKind);
+
+        // 两个都跳过：清空结果
+        if (!fg && !rg) {
+          clearResult();
+          return;
+        }
+
+        // 组合映射：先翻转（f），再旋转（r）。结果坐标先经 r，再经 f。
+        var mapFn;
+        var outW, outH;
+        if (fg && rg) {
+          outW = rg.w;
+          outH = rg.h;
+          mapFn = function (x, y) {
+            var m = rg.map(x, y);       // 旋转后坐标（在旋转结果坐标系）
+            var fm = fg.map(m[0], m[1]); // 旋转结果坐标 -> 翻转结果坐标（回到原图）
+            return fm;
+          };
+        } else if (fg) {
+          outW = fg.w;
+          outH = fg.h;
+          mapFn = fg.map;
+        } else {
+          outW = rg.w;
+          outH = rg.h;
+          mapFn = rg.map;
+        }
+
+        resultCanvas = remap(outW, outH, mapFn);
+        resultImg.src = resultCanvas.toDataURL("image/png");
+        resultImg.hidden = false;
+        resultPlaceholder.hidden = true;
+        resultMeta.hidden = false;
+        resultMeta.textContent =
+          "结果 " + resultCanvas.width + " × " + resultCanvas.height +
+          "（" + (resultCanvas.width * resultCanvas.height).toLocaleString() + " 像素）";
+        downloadBtn.disabled = false;
+      }
+
+      function download() {
+        if (!resultCanvas) return;
+        var a = document.createElement("a");
+        a.download = originalFileName + "_transformed.png";
+        a.href = resultCanvas.toDataURL("image/png");
+        a.click();
+      }
+
+      dropZone.addEventListener("click", function () { fileInput.click(); });
+      fileInput.addEventListener("change", function () {
+        if (fileInput.files && fileInput.files.length) loadFile(fileInput.files[0]);
+      });
+
+      ["dragover", "dragenter"].forEach(function (evt) {
+        dropZone.addEventListener(evt, function (e) {
+          e.preventDefault();
+          dropZone.classList.add("fr-drag-over");
+        });
+      });
+      ["dragleave", "drop"].forEach(function (evt) {
+        dropZone.addEventListener(evt, function (e) {
+          e.preventDefault();
+          dropZone.classList.remove("fr-drag-over");
+        });
+      });
+      dropZone.addEventListener("drop", function (e) {
+        var files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length) loadFile(files[0]);
+      });
+
+      resetBtn.addEventListener("click", reset);
+      flipSelect.addEventListener("change", buildResult);
+      rotateSelect.addEventListener("change", buildResult);
+      downloadBtn.addEventListener("click", download);
+    })();
+  </script>
+</body>
+</html>

@@ -131,9 +131,38 @@
       hintSync = syncKeepSize;
       if (state.keepOriginalSize) syncKeepSize();
 
+      // 等比调整尺寸：输入缩放比例，点击「计算」后根据原图尺寸自动填入 W/H
+      var scaleRow = document.createElement("div");
+      scaleRow.className = "ap-scale-row";
+      var scaleLb = document.createElement("label");
+      scaleLb.textContent = "等比缩放";
+      var scaleIn = document.createElement("input");
+      scaleIn.type = "number"; scaleIn.className = "ap-input"; scaleIn.placeholder = "比例";
+      scaleIn.min = 0.001; scaleIn.step = 0.01;
+      var scaleBtn = document.createElement("button");
+      scaleBtn.type = "button"; scaleBtn.className = "pixel-button"; scaleBtn.textContent = "计算";
+      function calcScale() {
+        var img = state.image;
+        var f = parseFloat(scaleIn.value);
+        if (!img) { showError("请先上传图片，再计算等比尺寸。"); return; }
+        if (isNaN(f) || f <= 0) { showError("请输入大于 0 的缩放比例。"); return; }
+        var w = Math.max(1, Math.round(img.width * f));
+        var h = Math.max(1, Math.round(img.height * f));
+        wIn.value = w; hIn.value = h;
+        state.params[key] = { w: w, h: h };
+        showError("");
+        refresh();
+      }
+      scaleBtn.addEventListener("click", calcScale);
+      scaleIn.addEventListener("keydown", function (e) { if (e.key === "Enter") calcScale(); });
+      scaleRow.appendChild(scaleLb);
+      scaleRow.appendChild(scaleIn);
+      scaleRow.appendChild(scaleBtn);
+
       row.appendChild(wIn); row.appendChild(x); row.appendChild(hIn);
       wrap.appendChild(row);
       wrap.appendChild(keepLb);
+      wrap.appendChild(scaleRow);
     } else if (m.type === "range") {
       var row = document.createElement("div");
       row.className = "ap-range-row";
